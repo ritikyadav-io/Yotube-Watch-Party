@@ -29,9 +29,14 @@ const userTemplate = document.querySelector("#user-template").innerHTML;
 // State Variables
 const params = new URLSearchParams(window.location.search);
 var rawUserParam = params.get('username');
+if (rawUserParam && rawUserParam.trim() && rawUserParam !== 'null' && rawUserParam !== 'undefined') {
+  localStorage.setItem('WATCH_PARTY_USERNAME', rawUserParam.trim());
+}
+var savedUser = localStorage.getItem('WATCH_PARTY_USERNAME');
 var username = (rawUserParam && rawUserParam.trim() && rawUserParam !== 'null' && rawUserParam !== 'undefined')
   ? rawUserParam.trim()
-  : ('Guest-' + Math.floor(1000 + Math.random() * 9000));
+  : (savedUser || ('Guest-' + Math.floor(1000 + Math.random() * 9000)));
+
 var roomid;
 var currentRole = 'PARTICIPANT';
 var isHost = false;
@@ -39,7 +44,9 @@ var hostSocketId = '';
 var control = 1;
 var unreadMessagesCount = 0;
 
-var currentVideoObj = { title: "Shawn Mendes - Treat You Better", channel: "Shawn Mendes", video_id: "sQVeK7dT18Y" };
+var isPlayerReady = false;
+var pendingSyncState = null;
+var currentVideoObj = null;
 var playlistQueue = [];
 var historyQueue = [];
 
@@ -65,7 +72,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const greetEl = document.getElementById('greeting-text') || $greet;
   if (greetEl) greetEl.textContent = `User: ${username}`;
 
-  loadVideoInPlayer(currentVideoObj);
   initApiKeyManager();
   initCopyButtons();
   initSidebarTabs();
@@ -210,6 +216,14 @@ async function initialSetup() {
     socket.emit("joinRoom", { username, roomid });
     document.getElementById("roomid").value = roomid;
   } else {
+    const defaultVideo = {
+      title: "Shawn Mendes - Treat You Better",
+      channel: "Shawn Mendes",
+      thumbnail_url: "https://i.ytimg.com/vi/sQVeK7dT18Y/hqdefault.jpg",
+      video_url: "https://www.youtube.com/watch?v=sQVeK7dT18Y",
+      video_id: "sQVeK7dT18Y"
+    };
+
     socket.emit("createRoom", { username });
     socket.on("getRoomID", (id) => {
       roomid = id;
@@ -218,6 +232,11 @@ async function initialSetup() {
       if (params.has('initialVideo')) {
         const initialUrl = params.get('initialVideo');
         addVideoFromUrl(initialUrl, true);
+      } else {
+        loadVideoInPlayer(defaultVideo);
+        if (canControlPlayback()) {
+          socket.emit("playVideoDirectly", defaultVideo);
+        }
       }
     });
   }
@@ -295,8 +314,11 @@ function loadVideoInPlayer(videoObj) {
   if (titleEl) titleEl.textContent = videoObj.title || "YouTube Watch Party Player";
   if (channelEl) channelEl.innerHTML = `<i class="fa-solid fa-circle-check text-primary me-1"></i> ${videoObj.channel || "Synchronized Stream"}`;
 
-  if (player && typeof player.loadVideoById === 'function') {
-    player.loadVideoById(videoObj.video_id, 0);
+  if (isPlayerReady && player && typeof player.loadVideoById === 'function') {
+    const currentId = (typeof player.getVideoData === 'function') ? player.getVideoData().video_id : null;
+    if (currentId !== videoObj.video_id) {
+      player.loadVideoById(videoObj.video_id, 0);
+    }
   } else {
     initYouTubePlayer(videoObj.video_id);
   }
@@ -1016,11 +1038,37 @@ function escapeHtml(str) {
 // --------------------------------------------------------------------------
 var player;
 
+function applyPendingSync() {
+  if (!pendingSyncState || !player || !isPlayerReady) return;
+  const sync = pendingSyncState;
+  pendingSyncState = null;
+
+  try {
+    const currentLoadedId = (typeof player.getVideoData === 'function') ? player.getVideoData().video_id : null;
+    if (!currentLoadedId || currentLoadedId !== sync.videoId) {
+      if (sync.isPlaying) {
+        player.loadVideoById(sync.videoId, sync.currentTime);
+      } else {
+        player.cueVideoById(sync.videoId, sync.currentTime);
+      }
+    } else {
+      player.seekTo(sync.currentTime, true);
+      if (sync.isPlaying) {
+        player.playVideo();
+      } else {
+        player.pauseVideo();
+      }
+    }
+  } catch (err) {
+    console.warn("applyPendingSync warning:", err);
+  }
+}
+
 function initYouTubePlayer(videoId) {
   const vidToPlay = videoId || (currentVideoObj ? currentVideoObj.video_id : 'sQVeK7dT18Y');
 
   if (player) {
-    if (typeof player.loadVideoById === 'function') {
+    if (isPlayerReady && typeof player.loadVideoById === 'function') {
       player.loadVideoById(vidToPlay, 0);
     }
     return;
@@ -1070,10 +1118,15 @@ function onPlayerError(event) {
 }
 
 function onPlayerReady(event) {
-  if (currentVideoObj) {
+  isPlayerReady = true;
+  if (pendingSyncState) {
+    applyPendingSync();
+  } else if (currentVideoObj) {
     loadVideoInPlayer(currentVideoObj);
+    event.target.pauseVideo();
+  } else {
+    event.target.pauseVideo();
   }
-  event.target.pauseVideo();
 }
 
 function onPlayerStateChange(event) {
@@ -1102,8 +1155,9 @@ function onPlayerStateChange(event) {
 // 7. Synchronized WebSocket Listeners
 // --------------------------------------------------------------------------
 socket.on("sync_state", (state) => {
-  if (!state || !state.videoId) return;
-  const targetVideoId = state.videoId;
+  if (!state || (!state.videoId && !state.videoObj)) return;
+  const targetVideoId = state.videoId || (state.videoObj ? state.videoObj.video_id : null);
+  if (!targetVideoId) return;
 
   let videoObj = state.videoObj;
   if (!videoObj) {
@@ -1115,45 +1169,74 @@ socket.on("sync_state", (state) => {
       video_url: `https://www.youtube.com/watch?v=${match.id}`,
       video_id: match.id
     } : {
-      title: "Shawn Mendes - Treat You Better",
-      channel: "Shawn Mendes",
+      title: "YouTube Watch Party Player",
+      channel: "Synchronized Stream",
       thumbnail_url: `https://i.ytimg.com/vi/${targetVideoId}/hqdefault.jpg`,
       video_url: `https://www.youtube.com/watch?v=${targetVideoId}`,
       video_id: targetVideoId
     };
   }
 
-  loadVideoInPlayer(videoObj);
+  currentVideoObj = videoObj;
 
-  if (player && typeof player.seekTo === 'function') {
-    player.seekTo(state.currentTime || 0, true);
-    if (state.isPlaying && typeof player.playVideo === 'function') {
-      player.playVideo();
-    } else if (!state.isPlaying && typeof player.pauseVideo === 'function') {
-      player.pauseVideo();
-    }
+  const titleEl = document.getElementById('video-title') || $videoTitle;
+  const channelEl = document.getElementById('channel-name') || $channelName;
+  if (titleEl) titleEl.textContent = videoObj.title || "YouTube Watch Party Player";
+  if (channelEl) channelEl.innerHTML = `<i class="fa-solid fa-circle-check text-primary me-1"></i> ${videoObj.channel || "Synchronized Stream"}`;
+
+  pendingSyncState = {
+    videoId: videoObj.video_id,
+    currentTime: state.currentTime || 0,
+    isPlaying: state.isPlaying !== false
+  };
+
+  if (isPlayerReady && player && typeof player.loadVideoById === 'function') {
+    applyPendingSync();
+  } else {
+    initYouTubePlayer(videoObj.video_id);
   }
 });
 
 socket.on("playVideoDirectly", (videoObj) => {
   if (videoObj && videoObj.video_id) {
-    loadVideoInPlayer(videoObj);
+    if (currentVideoObj) historyQueue.push(currentVideoObj);
+    currentVideoObj = videoObj;
+
+    const titleEl = document.getElementById('video-title') || $videoTitle;
+    const channelEl = document.getElementById('channel-name') || $channelName;
+    if (titleEl) titleEl.textContent = videoObj.title || "YouTube Watch Party Player";
+    if (channelEl) channelEl.innerHTML = `<i class="fa-solid fa-circle-check text-primary me-1"></i> ${videoObj.channel || "Synchronized Stream"}`;
+
+    pendingSyncState = { videoId: videoObj.video_id, currentTime: 0, isPlaying: true };
+
+    if (isPlayerReady && player && typeof player.loadVideoById === 'function') {
+      applyPendingSync();
+    } else {
+      initYouTubePlayer(videoObj.video_id);
+    }
   }
 });
 
 socket.on("videoPaused", () => {
-  if (player && typeof player.pauseVideo === 'function') player.pauseVideo();
+  if (isPlayerReady && player && typeof player.pauseVideo === 'function') {
+    player.pauseVideo();
+  }
 });
 
 socket.on("videoPlaying", (currentTime) => {
-  if (player && typeof player.seekTo === 'function' && typeof player.playVideo === 'function') {
+  if (isPlayerReady && player && typeof player.seekTo === 'function' && typeof player.playVideo === 'function') {
     player.seekTo(currentTime, true);
     player.playVideo();
+  } else {
+    if (pendingSyncState) {
+      pendingSyncState.currentTime = currentTime;
+      pendingSyncState.isPlaying = true;
+    }
   }
 });
 
 socket.on("seek", (currentTime) => {
-  if (player && typeof player.seekTo === 'function') {
+  if (isPlayerReady && player && typeof player.seekTo === 'function') {
     player.seekTo(currentTime, true);
   }
 });
