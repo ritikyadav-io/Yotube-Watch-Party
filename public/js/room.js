@@ -924,16 +924,17 @@ const ROOM_CURATED = [
 ];
 
 const roomCategoryFilterMap = {
-  'hindi_hits': (v) => v.category === 'hindi_hits' || ['arijit', 'kesariya', 'tum hi ho', 'channa mereya', 'badshah', 'jubin', 'neha kakkar'].some(k => v.title.toLowerCase().includes(k) || v.channel.toLowerCase().includes(k)),
-  'bollywood': (v) => v.category === 'bollywood' || ['raataan lambiyan', 'tere vaaste', 'shershaah', 'bollywood', 'aashiqui'].some(k => v.title.toLowerCase().includes(k) || v.channel.toLowerCase().includes(k)),
+  'all': (v) => true,
+  'famous_english': (v) => v.category === 'english_hits' || ['ed sheeran', 'justin bieber', 'shawn mendes', 'taylor swift', 'the weeknd', 'dua lipa', 'trevor daniel', 'duncan laurence', 'ckay', 'mark ronson', 'onerepublic', 'post malone', 'alan walker', 'maroon 5'].some(k => v.title.toLowerCase().includes(k) || v.channel.toLowerCase().includes(k)),
+  'bollywood': (v) => v.category === 'bollywood' || v.category === 'hindi_hits' || v.category === 'kk_songs' || ['arijit', 'kesariya', 'tum hi ho', 'channa mereya', 'badshah', 'jubin', 'raataan lambiyan', 'tere vaaste'].some(k => v.title.toLowerCase().includes(k) || v.channel.toLowerCase().includes(k)),
+  'kk_songs': (v) => v.category === 'kk_songs' || ['kk', 'tadap', 'zara sa', 'pal', 'yaaron', 'labon ko', 'alvida', 'tu hi meri shab'].some(k => v.title.toLowerCase().includes(k) || v.channel.toLowerCase().includes(k)),
   'seedhe_maut': (v) => v.category === 'seedhe_maut' || ['seedhe maut', 'kr$na', 'dhh', 'hip hop', 'divine', 'mc stan'].some(k => v.title.toLowerCase().includes(k) || v.channel.toLowerCase().includes(k)),
   'punjabi': (v) => v.category === 'punjabi' || ['sidhu moose wala', '295', 'ap dhillon', 'jass manak', 'punjabi', 'karan aujla'].some(k => v.title.toLowerCase().includes(k) || v.channel.toLowerCase().includes(k)),
   'indie_coke': (v) => v.category === 'indie_coke' || ['pasoori', 'husn', 'anuv jain', 'coke studio', 'jasleen royal', 'indie'].some(k => v.title.toLowerCase().includes(k) || v.channel.toLowerCase().includes(k)),
-  'famous_english': (v) => v.category === 'english_hits' || ['ed sheeran', 'justin bieber', 'shawn mendes', 'taylor swift', 'the weeknd', 'dua lipa'].some(k => v.title.toLowerCase().includes(k) || v.channel.toLowerCase().includes(k)),
   'gaming': (v) => v.category === 'gaming' || ['gta', 'minecraft', 'coding', 'freecodecamp', 'rockstar', 'tech'].some(k => v.title.toLowerCase().includes(k))
 };
 
-var currentRoomCategoryQuery = 'hindi_hits';
+var currentRoomCategoryQuery = 'all';
 
 function initRoomVideoFeed() {
   fetchRoomYouTubeVideos(currentRoomCategoryQuery);
@@ -959,13 +960,13 @@ function initRoomVideoFeed() {
 }
 
 const categoryQueryMap = {
-  'hindi_hits': 'trending hindi bollywood songs 2024 Arijit Singh',
+  'all': 'trending english pop and bollywood songs 2024',
+  'famous_english': 'famous english songs Justin Bieber Taylor Swift Ed Sheeran Trevor Daniel',
+  'bollywood': 'top bollywood romantic songs 2024 Arijit Singh Kesariya',
   'kk_songs': 'KK best hit songs Tadap Tadap Zara Sa Pal Yaaron',
-  'bollywood': 'top bollywood romantic songs 2024',
   'seedhe_maut': 'Seedhe Maut KRSNA Desi Hip Hop songs',
   'punjabi': 'top punjabi hit songs AP Dhillon Sidhu Moose Wala',
   'indie_coke': 'Coke Studio trending indie hindi songs Pasoori Husn',
-  'famous_english': 'famous english songs Justin Bieber Taylor Swift Ed Sheeran',
   'gaming': 'GTA VI trailer gaming'
 };
 
