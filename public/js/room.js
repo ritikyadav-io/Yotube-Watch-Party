@@ -913,14 +913,30 @@ const categoryQueryMap = {
 };
 
 async function fetchRoomYouTubeVideos(query = 'hindi_hits', isUserSearch = false) {
+  // 1. Immediately render local curated videos with 0ms delay so mobile users never experience blank pages or frozen UI
+  const filterFn = roomCategoryFilterMap[query];
+  let localMatches = filterFn ? ROOM_CURATED.filter(filterFn) : [];
+  if (localMatches.length === 0) {
+    const qLower = (categoryQueryMap[query] || query).toLowerCase().trim();
+    const terms = qLower.split(/\s+/);
+    localMatches = ROOM_CURATED.filter(v => {
+      const target = `${v.title} ${v.channel} ${v.category || ''} ${v.id}`.toLowerCase();
+      return terms.some(term => target.includes(term));
+    });
+  }
+  renderRoomVideoGrid(localMatches.length > 0 ? localMatches : ROOM_CURATED, isUserSearch);
+
   const apiKey = localStorage.getItem('YOUTUBE_API_KEY') || window.ENV_YOUTUBE_API_KEY || '';
   const actualQuery = categoryQueryMap[query] || query;
   
-  // 1. Official YouTube Data API
+  // 2. Official YouTube Data API (3s AbortController timeout)
   if (apiKey) {
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
       const apiUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=12&q=${encodeURIComponent(actualQuery)}&type=video&videoEmbeddable=true&key=${apiKey}`;
-      const res = await fetch(apiUrl);
+      const res = await fetch(apiUrl, { signal: controller.signal });
+      clearTimeout(timeoutId);
       const data = await res.json();
       if (data.items && data.items.length > 0) {
         const formatted = data.items
@@ -938,11 +954,11 @@ async function fetchRoomYouTubeVideos(query = 'hindi_hits', isUserSearch = false
         }
       }
     } catch (err) {
-      console.warn("API Key query failed:", err);
+      console.warn("API Key query timed out or failed:", err);
     }
   }
 
-  // 2. Public Piped & Invidious API Search Proxies
+  // 3. Optional Search Proxies (2.5s AbortController timeout per endpoint)
   const proxyEndpoints = [
     `https://pipedapi.kavin.rocks/search?q=${encodeURIComponent(actualQuery)}&filter=videos`,
     `https://api.piped.private.coffee/search?q=${encodeURIComponent(actualQuery)}&filter=videos`,
@@ -951,7 +967,10 @@ async function fetchRoomYouTubeVideos(query = 'hindi_hits', isUserSearch = false
 
   for (const endpoint of proxyEndpoints) {
     try {
-      const res = await fetch(endpoint);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2500);
+      const res = await fetch(endpoint, { signal: controller.signal });
+      clearTimeout(timeoutId);
       const data = await res.json();
       if (data && (data.items || Array.isArray(data))) {
         const list = Array.isArray(data) ? data : data.items;
@@ -975,28 +994,9 @@ async function fetchRoomYouTubeVideos(query = 'hindi_hits', isUserSearch = false
         }
       }
     } catch (e) {
-      // Ignore fallback
+      // Ignore proxy errors/timeouts as local grid is already rendered
     }
   }
-
-  // 3. Category & Local Multi-Keyword Fuzzy Lookup
-  const filterFn = roomCategoryFilterMap[query];
-  if (filterFn) {
-    const filtered = ROOM_CURATED.filter(filterFn);
-    if (filtered.length > 0) {
-      renderRoomVideoGrid(filtered, isUserSearch);
-      return;
-    }
-  }
-
-  const qLower = actualQuery.toLowerCase().trim();
-  const terms = qLower.split(/\s+/);
-  const filtered = ROOM_CURATED.filter(v => {
-    const target = `${v.title} ${v.channel} ${v.category || ''} ${v.id}`.toLowerCase();
-    return terms.some(term => target.includes(term));
-  });
-
-  renderRoomVideoGrid(filtered.length > 0 ? filtered : ROOM_CURATED, isUserSearch);
 }
 
 function renderRoomVideoGrid(videos, isUserSearch = false) {
