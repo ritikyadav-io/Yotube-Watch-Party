@@ -8,6 +8,7 @@ class RoomManager {
     constructor() {
         this.rooms = new Map();
         this.socketToRoom = new Map();
+        this.roomCleanupTimers = new Map();
     }
     static getInstance() {
         if (!RoomManager.instance) {
@@ -24,33 +25,6 @@ class RoomManager {
         this.rooms.set(roomId, room);
         this.socketToRoom.set(socketId, roomId);
         return { room, host };
-    }
-    joinRoom(rawRoomId, username, socketId) {
-        const roomId = (rawRoomId && typeof rawRoomId === 'string') ? rawRoomId.trim().toUpperCase() : generateRoomID_1.generateRoomID().trim().toUpperCase();
-        let room = this.rooms.get(roomId);
-        // If room does not exist yet, auto-create it with this roomId so users can seamlessly join without "Room does not exist" error
-        if (!room) {
-            const rawName = (username && typeof username === 'string') ? username.trim() : '';
-            const hostName = rawName || `Host-${socketId.substring(0, 4)}`;
-            const host = new Participant_1.Participant(socketId, hostName, roomId, Participant_1.Role.HOST);
-            room = new Room_1.Room(roomId, host);
-            this.rooms.set(roomId, room);
-            this.socketToRoom.set(socketId, roomId);
-            return { success: true, room, participant: host };
-        }
-        const rawName = (username && typeof username === 'string') ? username.trim() : '';
-        const baseName = rawName || `Guest-${socketId.substring(0, 4)}`;
-        // Auto-disambiguate duplicate names (e.g. "Alex" -> "Alex (1)")
-        let finalName = baseName;
-        let counter = 1;
-        while (room.getParticipantsList().some(p => p.username.toLowerCase() === finalName.toLowerCase())) {
-            finalName = `${baseName} (${counter})`;
-            counter++;
-        }
-        const participant = new Participant_1.Participant(socketId, finalName, roomId, Participant_1.Role.PARTICIPANT);
-        room.addParticipant(participant);
-        this.socketToRoom.set(socketId, roomId);
-        return { success: true, room, participant };
     }
     getRoom(rawRoomId) {
         if (!rawRoomId)
@@ -73,11 +47,61 @@ class RoomManager {
         if (!room)
             return {};
         const participant = room.removeParticipant(socketId);
-        // Delete empty room
+        // Schedule 60-second grace period before deleting empty room
+        // Prevents room destruction when host re-handshakes or switches transports (polling -> websocket)
         if (room.participants.size === 0) {
-            this.rooms.delete(roomId);
+            if (this.roomCleanupTimers.has(roomId)) {
+                clearTimeout(this.roomCleanupTimers.get(roomId));
+            }
+            const timer = setTimeout(() => {
+                const targetRoom = this.rooms.get(roomId);
+                if (targetRoom && targetRoom.participants.size === 0) {
+                    this.rooms.delete(roomId);
+                    console.log(`Room ${roomId} cleaned up after 60s grace period.`);
+                }
+                this.roomCleanupTimers.delete(roomId);
+            }, 60000);
+            this.roomCleanupTimers.set(roomId, timer);
         }
         return { room, participant };
+    }
+    joinRoom(rawRoomId, username, socketId) {
+        const roomId = (rawRoomId && typeof rawRoomId === 'string') ? rawRoomId.trim().toUpperCase() : generateRoomID_1.generateRoomID().trim().toUpperCase();
+        // Cancel cleanup timer if room was on grace period
+        if (this.roomCleanupTimers.has(roomId)) {
+            clearTimeout(this.roomCleanupTimers.get(roomId));
+            this.roomCleanupTimers.delete(roomId);
+        }
+        let room = this.rooms.get(roomId);
+        // If room does not exist yet, auto-create it with this roomId as host
+        if (!room) {
+            const rawName = (username && typeof username === 'string') ? username.trim() : '';
+            const hostName = rawName || `Host-${socketId.substring(0, 4)}`;
+            const host = new Participant_1.Participant(socketId, hostName, roomId, Participant_1.Role.HOST);
+            room = new Room_1.Room(roomId, host);
+            this.rooms.set(roomId, room);
+            this.socketToRoom.set(socketId, roomId);
+            return { success: true, room, participant: host };
+        }
+        const rawName = (username && typeof username === 'string') ? username.trim() : '';
+        const baseName = rawName || `Guest-${socketId.substring(0, 4)}`;
+        // If host or existing participant is reconnecting, re-associate them with existing room
+        let roleToAssign = Participant_1.Role.PARTICIPANT;
+        if (room.participants.size === 0) {
+            roleToAssign = Participant_1.Role.HOST;
+            room.hostSocketId = socketId;
+        }
+        // Auto-disambiguate duplicate names (e.g. "Alex" -> "Alex (1)")
+        let finalName = baseName;
+        let counter = 1;
+        while (room.getParticipantsList().some(p => p.username.toLowerCase() === finalName.toLowerCase())) {
+            finalName = `${baseName} (${counter})`;
+            counter++;
+        }
+        const participant = new Participant_1.Participant(socketId, finalName, roomId, roleToAssign);
+        room.addParticipant(participant);
+        this.socketToRoom.set(socketId, roomId);
+        return { success: true, room, participant };
     }
     checkIfUserExists(username, rawRoomId) {
         if (!rawRoomId)

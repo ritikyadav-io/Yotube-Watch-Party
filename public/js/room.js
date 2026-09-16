@@ -156,15 +156,18 @@ function initCopyButtons() {
 
   if (btnCopyId) {
     btnCopyId.addEventListener('click', () => {
-      const code = document.getElementById('roomid').value;
-      navigator.clipboard.writeText(code);
-      showToast("Room Code Copied!");
+      const code = document.getElementById('roomid')?.value || roomid;
+      if (code) {
+        navigator.clipboard.writeText(code);
+        showToast("Room Code Copied!");
+      }
     });
   }
 
   if (btnCopyLink) {
     btnCopyLink.addEventListener('click', () => {
-      const link = `${window.location.origin}/room.html?roomid=${roomid}`;
+      const currentRoomCode = document.getElementById('roomid')?.value || roomid;
+      const link = `${window.location.origin}/room.html?username=Guest&roomid=${encodeURIComponent(currentRoomCode)}`;
       navigator.clipboard.writeText(link);
       showToast("Invite Link Copied!");
     });
@@ -243,6 +246,8 @@ async function initialSetup() {
       if (id) {
         roomid = id.trim().toUpperCase();
         if (roomInput) roomInput.value = roomid;
+        const newUrl = `${window.location.pathname}?username=${encodeURIComponent(username)}&roomid=${encodeURIComponent(roomid)}`;
+        window.history.replaceState({}, '', newUrl);
         if (currentVideoObj) {
           socket.emit("playVideoDirectly", currentVideoObj);
         }
@@ -986,31 +991,17 @@ async function fetchMoreRoomYouTubeVideos(query) {
   const randomTerm = querySearchTerms[Math.floor(Math.random() * querySearchTerms.length)];
   const actualQuery = categoryQueryMap[query] || randomTerm;
 
-  if (apiKey) {
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3000);
-      const apiUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=15&q=${encodeURIComponent(actualQuery)}&type=video&videoEmbeddable=true&key=${apiKey}`;
-      const res = await fetch(apiUrl, { signal: controller.signal });
-      clearTimeout(timeoutId);
-      const data = await res.json();
-      if (data.items && data.items.length > 0) {
-        const formatted = data.items
-          .filter(item => item.id && item.id.videoId)
-          .map(item => ({
-            id: item.id.videoId,
-            title: item.snippet.title,
-            channel: item.snippet.channelTitle,
-            thumbnail: item.snippet.thumbnails.high ? item.snippet.thumbnails.high.url : (item.snippet.thumbnails.medium ? item.snippet.thumbnails.medium.url : item.snippet.thumbnails.default.url)
-          }));
-        if (formatted.length > 0) {
-          appendRoomVideoGrid(formatted);
-          return;
-        }
-      }
-    } catch (err) {
-      console.warn("Watch More YouTube API query failed:", err);
+  try {
+    const res = await fetch(`/api/youtube/search?q=${encodeURIComponent(actualQuery)}`, {
+      headers: apiKey ? { 'X-YouTube-API-Key': apiKey } : {}
+    });
+    const data = await res.json();
+    if (data.success && data.videos && data.videos.length > 0) {
+      appendRoomVideoGrid(data.videos);
+      return;
     }
+  } catch (err) {
+    console.warn("Watch More YouTube API query failed:", err);
   }
 
   // Fallback: Pick a shuffled selection of curated songs from ROOM_CURATED catalog
@@ -1034,9 +1025,10 @@ function appendRoomVideoGrid(videos) {
     const card = document.createElement('div');
     card.className = 'video-card';
     card.dataset.videoId = video.id;
+    const thumbUrl = video.thumbnail || `https://img.youtube.com/vi/${video.id}/hqdefault.jpg`;
     card.innerHTML = `
       <div class="video-thumb-wrapper">
-        <img class="video-thumb-img" src="${video.thumbnail}" alt="${escapeHtml(video.title)}">
+        <img class="video-thumb-img" src="${thumbUrl}" alt="${escapeHtml(video.title)}" onerror="this.onerror=null; this.src='https://img.youtube.com/vi/${video.id}/mqdefault.jpg';">
         <div class="video-play-overlay">
           <div class="play-btn-circle"><i class="fa-solid fa-play ms-1"></i></div>
         </div>
@@ -1122,73 +1114,18 @@ async function fetchRoomYouTubeVideos(query = 'hindi_hits', isUserSearch = false
   const apiKey = localStorage.getItem('YOUTUBE_API_KEY') || window.ENV_YOUTUBE_API_KEY || '';
   const actualQuery = categoryQueryMap[query] || query;
   
-  // 2. Official YouTube Data API (3s AbortController timeout)
-  if (apiKey) {
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3000);
-      const apiUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=12&q=${encodeURIComponent(actualQuery)}&type=video&videoEmbeddable=true&key=${apiKey}`;
-      const res = await fetch(apiUrl, { signal: controller.signal });
-      clearTimeout(timeoutId);
-      const data = await res.json();
-      if (data.items && data.items.length > 0) {
-        const formatted = data.items
-          .filter(item => item.id && item.id.videoId)
-          .slice(0, 12)
-          .map(item => ({
-            id: item.id.videoId,
-            title: item.snippet.title,
-            channel: item.snippet.channelTitle,
-            thumbnail: item.snippet.thumbnails.high ? item.snippet.thumbnails.high.url : (item.snippet.thumbnails.medium ? item.snippet.thumbnails.medium.url : item.snippet.thumbnails.default.url)
-          }));
-        if (formatted.length > 0) {
-          renderRoomVideoGrid(formatted, isUserSearch);
-          return;
-        }
-      }
-    } catch (err) {
-      console.warn("API Key query timed out or failed:", err);
+  // 2. Fetch live YouTube videos from backend endpoint
+  try {
+    const res = await fetch(`/api/youtube/search?q=${encodeURIComponent(actualQuery)}`, {
+      headers: apiKey ? { 'X-YouTube-API-Key': apiKey } : {}
+    });
+    const data = await res.json();
+    if (data.success && data.videos && data.videos.length > 0) {
+      renderRoomVideoGrid(data.videos, isUserSearch);
+      return;
     }
-  }
-
-  // 3. Optional Search Proxies (2.5s AbortController timeout per endpoint)
-  const proxyEndpoints = [
-    `https://pipedapi.kavin.rocks/search?q=${encodeURIComponent(actualQuery)}&filter=videos`,
-    `https://api.piped.private.coffee/search?q=${encodeURIComponent(actualQuery)}&filter=videos`,
-    `https://yt.lemnoslife.com/noKey/search?q=${encodeURIComponent(actualQuery)}`
-  ];
-
-  for (const endpoint of proxyEndpoints) {
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 2500);
-      const res = await fetch(endpoint, { signal: controller.signal });
-      clearTimeout(timeoutId);
-      const data = await res.json();
-      if (data && (data.items || Array.isArray(data))) {
-        const list = Array.isArray(data) ? data : data.items;
-        const formatted = list
-          .filter(item => (item.url && item.url.includes('/watch?v=')) || (item.id && item.id.videoId) || item.videoId)
-          .slice(0, 12)
-          .map(item => {
-            const vId = item.videoId || (item.id ? item.id.videoId : null) || (item.url ? item.url.split('v=')[1] : null);
-            return {
-              id: vId,
-              title: item.title || (item.snippet ? item.snippet.title : 'YouTube Video'),
-              channel: item.uploaderName || (item.snippet ? item.snippet.channelTitle : 'YouTube Channel'),
-              thumbnail: item.thumbnail || (item.snippet && item.snippet.thumbnails && item.snippet.thumbnails.high ? item.snippet.thumbnails.high.url : `https://img.youtube.com/vi/${vId}/hqdefault.jpg`)
-            };
-          })
-          .filter(v => v.id);
-
-        if (formatted.length > 0) {
-          renderRoomVideoGrid(formatted, isUserSearch);
-          return;
-        }
-      }
-    } catch (e) {
-      // Ignore proxy errors/timeouts as local grid is already rendered
-    }
+  } catch (err) {
+    console.warn("Live YouTube API query failed:", err);
   }
 }
 
@@ -1223,9 +1160,10 @@ function renderRoomVideoGrid(videos, isUserSearch = false) {
   uniqueList.slice(0, 12).forEach(video => {
     const card = document.createElement('div');
     card.className = 'video-card';
+    const thumbUrl = video.thumbnail || `https://img.youtube.com/vi/${video.id}/hqdefault.jpg`;
     card.innerHTML = `
       <div class="video-thumb-wrapper">
-        <img class="video-thumb-img" src="${video.thumbnail}" alt="${escapeHtml(video.title)}">
+        <img class="video-thumb-img" src="${thumbUrl}" alt="${escapeHtml(video.title)}" onerror="this.onerror=null; this.src='https://img.youtube.com/vi/${video.id}/mqdefault.jpg';">
         <div class="video-play-overlay">
           <div class="play-btn-circle"><i class="fa-solid fa-play ms-1"></i></div>
         </div>

@@ -86,9 +86,9 @@ const CURATED_VIDEOS = [
 const categoryFilterMap = {
   'famous_english': (v) => v.category === 'english_hits' || ['ed sheeran', 'justin bieber', 'shawn mendes', 'taylor swift', 'passenger', 'the weeknd', 'coldplay', 'dua lipa', 'harry styles', 'trevor daniel', 'duncan laurence', 'ckay', 'mark ronson', 'onerepublic', 'post malone', 'alan walker', 'maroon 5'].some(k => v.title.toLowerCase().includes(k) || v.channel.toLowerCase().includes(k)),
   'kk_songs': (v) => v.category === 'kk_songs' || ['kk', 'tadap', 'zara sa', 'pal', 'yaaron', 'labon ko', 'alvida', 'tu hi meri shab'].some(k => v.title.toLowerCase().includes(k) || v.channel.toLowerCase().includes(k)),
-  'bieber_shawn': (v) => ['bieber', 'shawn mendes', 'mendes'].some(k => v.title.toLowerCase().includes(k) || v.channel.toLowerCase().includes(k)),
-  'pop_hits': (v) => v.category === 'english_hits' || ['dua lipa', 'harry styles', 'post malone', 'alan walker', 'maroon 5', 'taylor swift', 'justin bieber', 'the weeknd'].some(k => v.title.toLowerCase().includes(k) || v.channel.toLowerCase().includes(k)),
+  'hindi_hits': (v) => v.category === 'hindi_hits' || v.category === 'bollywood' || ['arijit', 'kesariya', 'tum hi ho', 'channa mereya', 'jubin', 'raataan lambiyan', 'tere vaaste', 'hindi', 'bollywood'].some(k => v.title.toLowerCase().includes(k) || v.channel.toLowerCase().includes(k)),
   'seedhe_maut': (v) => v.category === 'seedhe_maut' || ['seedhe maut', 'kr$na', 'jasleen', 'dhh', 'hip hop'].some(k => v.title.toLowerCase().includes(k) || v.channel.toLowerCase().includes(k)),
+  'punjabi': (v) => v.category === 'punjabi' || ['sidhu moose wala', '295', 'ap dhillon', 'jass manak', 'punjabi', 'karan aujla'].some(k => v.title.toLowerCase().includes(k) || v.channel.toLowerCase().includes(k)),
   'learning': (v) => v.category === 'learning' || ['c ', 'c++', 'coding', 'programming', 'pointers', 'data structures', 'steve jobs', 'llama', 'karpathy', 'ai'].some(k => v.title.toLowerCase().includes(k)),
   'gaming': (v) => v.category === 'gaming' || v.category === 'entertainment' || ['gta', 'minecraft', 'elden ring', 'avatar', 'oppenheimer', 'spider-man', 'dark knight'].some(k => v.title.toLowerCase().includes(k))
 };
@@ -96,9 +96,9 @@ const categoryFilterMap = {
 const categoryQueryMap = {
   'famous_english': 'famous english songs Justin Bieber Shawn Mendes Taylor Swift',
   'kk_songs': 'KK best hit songs bollywood Tadap Tadap Zara Sa Pal',
-  'bieber_shawn': 'Justin Bieber Shawn Mendes official music videos',
-  'pop_hits': 'viral pop english songs 2024',
-  'seedhe_maut': 'Seedhe Maut hip hop songs',
+  'hindi_hits': 'top bollywood romantic songs Arijit Singh Kesariya',
+  'seedhe_maut': 'Seedhe Maut KRSNA hip hop songs',
+  'punjabi': 'top punjabi hit songs AP Dhillon Sidhu Moose Wala',
   'learning': 'C programming full course freeCodeCamp',
   'gaming': 'GTA VI trailer gaming'
 };
@@ -147,30 +147,16 @@ async function fetchMoreLandingVideos(query) {
   const randomTerm = searchTerms[Math.floor(Math.random() * searchTerms.length)];
   const actualQuery = categoryQueryMap[query] || randomTerm;
 
-  if (apiKey) {
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3000);
-      const apiUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=15&q=${encodeURIComponent(actualQuery)}&type=video&videoEmbeddable=true&key=${apiKey}`;
-      const res = await fetch(apiUrl, { signal: controller.signal });
-      clearTimeout(timeoutId);
-      const data = await res.json();
-      if (data.items && data.items.length > 0) {
-        const formatted = data.items
-          .filter(item => item.id && item.id.videoId)
-          .map(item => ({
-            id: item.id.videoId,
-            title: item.snippet.title,
-            channel: item.snippet.channelTitle,
-            thumbnail: item.snippet.thumbnails.high ? item.snippet.thumbnails.high.url : (item.snippet.thumbnails.medium ? item.snippet.thumbnails.medium.url : item.snippet.thumbnails.default.url)
-          }));
-        if (formatted.length > 0) {
-          appendLandingVideoGrid(formatted);
-          return;
-        }
-      }
-    } catch (err) {}
-  }
+  try {
+    const res = await fetch(`/api/youtube/search?q=${encodeURIComponent(actualQuery)}`, {
+      headers: apiKey ? { 'X-YouTube-API-Key': apiKey } : {}
+    });
+    const data = await res.json();
+    if (data.success && data.videos && data.videos.length > 0) {
+      appendLandingVideoGrid(data.videos);
+      return;
+    }
+  } catch (err) {}
 
   const shuffled = [...CURATED_VIDEOS].sort(() => Math.random() - 0.5);
   appendLandingVideoGrid(shuffled.slice(0, 12));
@@ -192,9 +178,10 @@ function appendLandingVideoGrid(videos) {
     const card = document.createElement('div');
     card.className = 'video-card';
     card.dataset.videoId = video.id;
+    const thumbUrl = video.thumbnail || `https://img.youtube.com/vi/${video.id}/hqdefault.jpg`;
     card.innerHTML = `
       <div class="video-thumb-wrapper">
-        <img class="video-thumb-img" src="${video.thumbnail}" alt="${escapeHtml(video.title)}">
+        <img class="video-thumb-img" src="${thumbUrl}" alt="${escapeHtml(video.title)}" onerror="this.onerror=null; this.src='https://img.youtube.com/vi/${video.id}/mqdefault.jpg';">
         <div class="video-play-overlay">
           <div class="play-btn-circle"><i class="fa-solid fa-play ms-1"></i></div>
         </div>
@@ -242,7 +229,7 @@ function initRoomForms() {
         }
         return;
       }
-      window.location.href = `/room.html?username=${encodeURIComponent(username)}&roomid=${encodeURIComponent(roomid)}`;
+      window.location.href = `/room.html?username=${encodeURIComponent(username)}&roomid=${encodeURIComponent(roomid.toUpperCase())}`;
     });
   }
 
@@ -256,39 +243,26 @@ function initRoomForms() {
   }
 }
 
-// Fetch from YouTube Data API v3 using user/env key, or curated fallback catalog
+// Fetch from YouTube Data API endpoint or fallback catalog
 async function fetchYouTubeVideos(query = 'famous_english') {
   const apiKey = localStorage.getItem('YOUTUBE_API_KEY') || window.ENV_YOUTUBE_API_KEY || '';
   const actualQuery = categoryQueryMap[query] || query;
   
-  // 1. Official YouTube Data API v3 Query
-  if (apiKey) {
-    try {
-      const apiUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=15&q=${encodeURIComponent(actualQuery)}&type=video&videoEmbeddable=true&key=${apiKey}`;
-      const res = await fetch(apiUrl);
-      const data = await res.json();
-      
-      if (data.items && data.items.length > 0) {
-        const formatted = data.items
-          .filter(item => item.id && item.id.videoId)
-          .slice(0, 15)
-          .map(item => ({
-            id: item.id.videoId,
-            title: item.snippet.title,
-            channel: item.snippet.channelTitle,
-            thumbnail: item.snippet.thumbnails.high ? item.snippet.thumbnails.high.url : (item.snippet.thumbnails.medium ? item.snippet.thumbnails.medium.url : item.snippet.thumbnails.default.url)
-          }));
-        if (formatted.length > 0) {
-          renderVideoGrid(formatted);
-          return;
-        }
-      }
-    } catch (err) {
-      console.warn("YouTube Data API request failed:", err);
+  // 1. Live YouTube API Search Endpoint
+  try {
+    const res = await fetch(`/api/youtube/search?q=${encodeURIComponent(actualQuery)}`, {
+      headers: apiKey ? { 'X-YouTube-API-Key': apiKey } : {}
+    });
+    const data = await res.json();
+    if (data.success && data.videos && data.videos.length > 0) {
+      renderVideoGrid(data.videos);
+      return;
     }
+  } catch (err) {
+    console.warn("Live YouTube API request failed, trying curated catalog:", err);
   }
 
-  // 2. Category Filter Lookup
+  // 2. Category Filter Lookup Fallback
   const filterFn = categoryFilterMap[query];
   if (filterFn) {
     const filtered = CURATED_VIDEOS.filter(filterFn);
@@ -319,9 +293,10 @@ function renderVideoGrid(videos) {
   videos.forEach(video => {
     const card = document.createElement('div');
     card.className = 'video-card';
+    const thumbUrl = video.thumbnail || `https://img.youtube.com/vi/${video.id}/hqdefault.jpg`;
     card.innerHTML = `
       <div class="video-thumb-wrapper">
-        <img class="video-thumb-img" src="${video.thumbnail}" alt="${escapeHtml(video.title)}">
+        <img class="video-thumb-img" src="${thumbUrl}" alt="${escapeHtml(video.title)}" onerror="this.onerror=null; this.src='https://img.youtube.com/vi/${video.id}/mqdefault.jpg';">
         <div class="video-play-overlay">
           <div class="play-btn-circle"><i class="fa-solid fa-play ms-1"></i></div>
         </div>
@@ -339,7 +314,6 @@ function renderVideoGrid(videos) {
       </div>
     `;
 
-    // Click handler to start party with video
     card.querySelector('.btn-start-party').addEventListener('click', (e) => {
       e.stopPropagation();
       startPartyWithVideo(video.id);
