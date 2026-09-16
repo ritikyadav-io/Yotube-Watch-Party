@@ -1130,17 +1130,22 @@ function applyPendingSync() {
 function ensureYouTubePlayerLoaded(videoId) {
   const vidToPlay = videoId || (currentVideoObj ? currentVideoObj.video_id : 'JGwWNGJdvx8');
 
-  if (player) {
-    if (isPlayerReady && typeof player.loadVideoById === 'function') {
-      try {
-        player.loadVideoById(vidToPlay, 0);
-      } catch (e) {}
-    }
-    return;
+  // 1. If YT.Player instance is initialized and ready, use loadVideoById
+  if (player && isPlayerReady && typeof player.loadVideoById === 'function') {
+    try {
+      player.loadVideoById(vidToPlay, 0);
+      return;
+    } catch (e) {}
   }
 
-  if (typeof YT !== 'undefined' && YT.Player) {
+  // 2. If YT API constructor is available, create API player
+  if (typeof YT !== 'undefined' && YT.Player && typeof YT.Player === 'function') {
     try {
+      const container = document.getElementById('player');
+      if (container && container.querySelector('iframe#fallback-yt-iframe')) {
+        container.innerHTML = '';
+      }
+
       player = new YT.Player('player', {
         height: '100%',
         width: '100%',
@@ -1161,14 +1166,22 @@ function ensureYouTubePlayerLoaded(videoId) {
       });
       return;
     } catch (err) {
-      console.warn("YT.Player init failed, using iframe fallback:", err);
+      console.warn("YT.Player init warning, using mobile iframe fallback:", err);
     }
   }
 
-  // Mobile/Network Fallback: Direct iframe embed if YT.Player API script hasn't loaded
+  // 3. Mobile / Network Fallback Embed: Render or update YouTube responsive iframe directly
   const playerContainer = document.getElementById('player');
-  if (playerContainer && !playerContainer.querySelector('iframe')) {
-    playerContainer.innerHTML = `<iframe id="fallback-yt-iframe" style="width:100%; height:100%; border:0; position:absolute; top:0; left:0;" src="https://www.youtube.com/embed/${vidToPlay}?autoplay=1&playsinline=1&enablejsapi=1" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+  if (playerContainer) {
+    const embedUrl = `https://www.youtube.com/embed/${vidToPlay}?autoplay=1&playsinline=1&enablejsapi=1&rel=0`;
+    const existingIframe = playerContainer.querySelector('iframe');
+    if (existingIframe) {
+      if (!existingIframe.src.includes(vidToPlay)) {
+        existingIframe.src = embedUrl;
+      }
+    } else {
+      playerContainer.innerHTML = `<iframe id="fallback-yt-iframe" style="width:100%; height:100%; border:0; position:absolute; top:0; left:0;" src="${embedUrl}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+    }
   }
 }
 
