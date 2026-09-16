@@ -1,24 +1,24 @@
 {
-  "name": "Youtube-Party",
+  "name": "Yotube-Watch-Party",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Real-time synchronized YouTube watch party application with live chat and RBAC controls",
+  "main": "dist/index.js",
   "scripts": {
     "start": "node dist/index.js",
-    "dev": "nodemon src/index.ts",
+    "dev": "npx nodemon --exec npx ts-node src/index.ts",
     "build": "tsc -p ."
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ZalakBhojani/Youtube-Party.git"
+    "url": "git+https://github.com/ritikyadav-io/Yotube-Watch-Party.git"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": ["youtube", "watch-party", "realtime", "websocket", "socketio", "typescript"],
+  "author": "ritikyadav-io",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/ZalakBhojani/Youtube-Party/issues"
+    "url": "https://github.com/ritikyadav-io/Yotube-Watch-Party/issues"
   },
-  "homepage": "https://github.com/ZalakBhojani/Youtube-Party#readme",
+  "homepage": "https://github.com/ritikyadav-io/Yotube-Watch-Party#readme",
   "dependencies": {
     "clipboard": "^2.0.8",
     "express": "^4.17.1",
