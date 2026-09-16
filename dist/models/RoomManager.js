@@ -83,6 +83,10 @@ class RoomManager {
             this.socketToRoom.set(socketId, roomId);
             return { success: true, room, participant: host };
         }
+        // Enforce maximum limit of 5 participants per room
+        if (room.participants.size >= 5 && !room.participants.has(socketId)) {
+            return { success: false, error: "Room is full! Maximum limit of 5 participants reached." };
+        }
         const rawName = (username && typeof username === 'string') ? username.trim() : '';
         const baseName = rawName || `Guest-${socketId.substring(0, 4)}`;
         // If host or existing participant is reconnecting, re-associate them with existing room

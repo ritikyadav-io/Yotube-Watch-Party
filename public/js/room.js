@@ -642,6 +642,16 @@ function renderMembersList() {
     isHost = (currentRole === 'HOST' || currentRole === 'ADMIN');
   }
 
+  // Only show Room Code and Invite Link to the Room Host
+  const hostActionsEl = document.getElementById('host-room-actions') || document.querySelector('.header-room-actions');
+  if (hostActionsEl) {
+    if (isHost) {
+      hostActionsEl.classList.remove('d-none');
+    } else {
+      hostActionsEl.classList.add('d-none');
+    }
+  }
+
   roomMembersList.forEach(user => {
     if (!user) return;
     const isTargetHost = (user.id === hostSocketId || user.role === 'HOST' || user.role === 'ADMIN');
@@ -764,7 +774,7 @@ socket.on("error", (data) => {
   if (data && data.message) {
     if (window.swal) {
       swal("Room Notice", data.message, "warning").then(() => {
-        if (data.message.includes("Room ID does not exist")) {
+        if (data.message.includes("Room ID does not exist") || data.message.includes("Room is full")) {
           window.location.href = "/";
         }
       });
