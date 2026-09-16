@@ -1022,24 +1022,40 @@ const categoryQueryMap = {
   'gaming': 'GTA VI trailer gaming'
 };
 
+const WATCH_MORE_SEARCH_TERMS = [
+  'Arijit Singh best romantic hit songs 2024',
+  'Seedhe Maut KRSNA Khatta Flow Desi Hip Hop',
+  'KK all time hit romantic songs Tadap Tadap',
+  'Taylor Swift Ed Sheeran famous pop songs',
+  'AP Dhillon Sidhu Moose Wala Karan Aujla Punjabi hits',
+  'Coke Studio pasoori husn indie hindi viral songs',
+  'Atif Aslam top romantic Bollywood songs',
+  'Badshah Honey Singh Party dance songs',
+  'Justin Bieber Shawn Mendes pop hit songs',
+  'The Weeknd Dua Lipa viral English hits',
+  'Shreya Ghoshal top romantic Bollywood hits',
+  'Pritam top hit songs 2024',
+  'Anuv Jain Husn Baarishein indie songs',
+  'Divine MC Stan Desi Hip Hop rap hits',
+  'Diljit Dosanjh Lover Born to Shine songs',
+  'Alan Walker Faded Alone EDM party hits',
+  'OneRepublic Post Malone Maroon 5 hits',
+  'Jasleen Royal Nachde Ne Saare romantic songs',
+  'Jubin Nautiyal Raataan Lambiyan hit songs',
+  'Darshan Raval romantic songs 2024'
+];
+
+let watchMoreSearchIndex = 0;
+
 async function fetchMoreRoomYouTubeVideos(query) {
   showToast("Fetching New Live YouTube Songs...", "fa-arrows-rotate");
   const apiKey = localStorage.getItem('YOUTUBE_API_KEY') || window.ENV_YOUTUBE_API_KEY || '';
   
-  const querySearchTerms = [
-    'top hindi songs 2024 arijit singh',
-    'KK best hit romantic songs',
-    'Seedhe Maut KRSNA khatta flow dhh',
-    'Ed Sheeran Taylor Swift famous english hits',
-    'AP Dhillon Sidhu Moose Wala punjabi hits',
-    'Coke Studio pasoori husn indie hindi',
-    'top bollywood romantic hit songs',
-    'Justin Bieber Shawn Mendes pop hits',
-    'The Weeknd Dua Lipa viral songs',
-    'Badshah Honey Singh party songs'
-  ];
-  const randomTerm = querySearchTerms[Math.floor(Math.random() * querySearchTerms.length)];
-  const actualQuery = categoryQueryMap[query] ? `${categoryQueryMap[query]} ${Math.floor(Math.random() * 100)}` : randomTerm;
+  // Pick next search term from rich pool so every click fetches new live YouTube videos
+  const term = WATCH_MORE_SEARCH_TERMS[watchMoreSearchIndex % WATCH_MORE_SEARCH_TERMS.length];
+  watchMoreSearchIndex++;
+
+  const actualQuery = (query && query !== 'all' && categoryQueryMap[query]) ? categoryQueryMap[query] : term;
 
   try {
     const res = await fetch(`/api/youtube/search?q=${encodeURIComponent(actualQuery)}`, {
@@ -1056,7 +1072,7 @@ async function fetchMoreRoomYouTubeVideos(query) {
 
   // Fallback: Pick a shuffled selection of curated songs from ROOM_CURATED catalog
   const shuffled = [...ROOM_CURATED].sort(() => Math.random() - 0.5);
-  appendRoomVideoGrid(shuffled.slice(0, 12));
+  appendRoomVideoGrid(shuffled.slice(0, 8));
 }
 
 function appendRoomVideoGrid(videos) {

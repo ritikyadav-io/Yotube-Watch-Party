@@ -112,6 +112,18 @@ app.get("/api/youtube/search", async (req, res) => {
                                     channel: v.ownerText?.runs?.[0]?.text || v.longBylineText?.runs?.[0]?.text || 'YouTube Channel',
                                     thumbnail: `https://img.youtube.com/vi/${v.videoId}/hqdefault.jpg`
                                 });
+                            } else if (item.shelfRenderer?.content?.verticalListRenderer?.items) {
+                                for (const subItem of item.shelfRenderer.content.verticalListRenderer.items) {
+                                    if (subItem.videoRenderer && subItem.videoRenderer.videoId) {
+                                        const subV = subItem.videoRenderer;
+                                        videoItems.push({
+                                            id: subV.videoId,
+                                            title: subV.title?.runs?.[0]?.text || 'YouTube Video',
+                                            channel: subV.ownerText?.runs?.[0]?.text || subV.longBylineText?.runs?.[0]?.text || 'YouTube Channel',
+                                            thumbnail: `https://img.youtube.com/vi/${subV.videoId}/hqdefault.jpg`
+                                        });
+                                    }
+                                }
                             }
                         }
                     }

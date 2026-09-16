@@ -55,7 +55,7 @@ const io = new socket_io_1.default.Server(httpServer, {
 });
 // YouTube Real-time Search Proxy (Official API Key with public renderer fallback)
 app.get("/api/youtube/search", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _0, _1;
     const query = (req.query.q || 'famous english songs').trim();
     const userApiKey = req.headers['x-youtube-api-key'] || req.query.key || process.env.YOUTUBE_API_KEY || '';
     // 1. Try official YouTube Data API v3 if API key is provided
@@ -115,6 +115,19 @@ app.get("/api/youtube/search", (req, res) => __awaiter(void 0, void 0, void 0, f
                                     channel: ((_l = (_k = (_j = v.ownerText) === null || _j === void 0 ? void 0 : _j.runs) === null || _k === void 0 ? void 0 : _k[0]) === null || _l === void 0 ? void 0 : _l.text) || ((_p = (_o = (_m = v.longBylineText) === null || _m === void 0 ? void 0 : _m.runs) === null || _o === void 0 ? void 0 : _o[0]) === null || _p === void 0 ? void 0 : _p.text) || 'YouTube Channel',
                                     thumbnail: `https://img.youtube.com/vi/${v.videoId}/hqdefault.jpg`
                                 });
+                            }
+                            else if ((_s = (_r = (_q = item.shelfRenderer) === null || _q === void 0 ? void 0 : _q.content) === null || _r === void 0 ? void 0 : _r.verticalListRenderer) === null || _s === void 0 ? void 0 : _s.items) {
+                                for (const subItem of item.shelfRenderer.content.verticalListRenderer.items) {
+                                    if (subItem.videoRenderer && subItem.videoRenderer.videoId) {
+                                        const subV = subItem.videoRenderer;
+                                        videoItems.push({
+                                            id: subV.videoId,
+                                            title: ((_v = (_u = (_t = subV.title) === null || _t === void 0 ? void 0 : _t.runs) === null || _u === void 0 ? void 0 : _u[0]) === null || _v === void 0 ? void 0 : _v.text) || 'YouTube Video',
+                                            channel: ((_y = (_x = (_w = subV.ownerText) === null || _w === void 0 ? void 0 : _w.runs) === null || _x === void 0 ? void 0 : _x[0]) === null || _y === void 0 ? void 0 : _y.text) || ((_1 = (_0 = (_z = subV.longBylineText) === null || _z === void 0 ? void 0 : _z.runs) === null || _0 === void 0 ? void 0 : _0[0]) === null || _1 === void 0 ? void 0 : _1.text) || 'YouTube Channel',
+                                            thumbnail: `https://img.youtube.com/vi/${subV.videoId}/hqdefault.jpg`
+                                        });
+                                    }
+                                }
                             }
                         }
                     }
