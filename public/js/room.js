@@ -526,24 +526,22 @@ if ($urlForm) {
 
 $messageForm.addEventListener('submit', (e) => {
   e.preventDefault();
-  $messageFormButton.setAttribute('disabled', 'disabled');
   const message = $messageFormInput.value.trim();
-  if (!message) {
-    $messageFormButton.removeAttribute('disabled');
-    return;
-  }
+  if (!message) return;
 
-  // Ensure Chat tab is visible when user sends a message
+  // Clear input immediately so user can continue typing seamlessly on mobile
+  $messageFormInput.value = '';
+  $messageFormInput.focus();
+
+  // Ensure Chat tab is visible
   switchToTab('chat');
 
-  socket.emit('sendMessage', message, () => {
-    $messageFormButton.removeAttribute('disabled');
-    $messageFormInput.value = '';
-    $messageFormInput.focus();
-  });
+  socket.emit('sendMessage', message);
 });
 
 socket.on('message', (message) => {
+  if (!message || !message.text) return;
+
   const isSystem = message.username === 'System';
   const isMe = !isSystem && ((message.senderId && message.senderId === socket.id) || (message.username === username));
   const isHostMsg = message.isHost || (message.username && message.username.includes('(Owner)'));
@@ -551,17 +549,40 @@ socket.on('message', (message) => {
     ? new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-  const html = Mustache.render(messageTemplate, {
-    username: message.username,
-    message: message.text,
-    meClass: isMe ? 'me' : '',
-    badge: isHostMsg ? '<span class="chat-author-badge">Host</span>' : '',
-    isSystem: isSystem,
-    time: timeStr
-  });
+  let html = '';
+  try {
+    if (typeof Mustache !== 'undefined' && messageTemplate) {
+      html = Mustache.render(messageTemplate, {
+        username: escapeHtml(message.username || 'User'),
+        message: escapeHtml(message.text || ''),
+        meClass: isMe ? 'me' : '',
+        badge: isHostMsg ? '<span class="chat-author-badge">Host</span>' : '',
+        isSystem: isSystem,
+        time: timeStr
+      });
+    } else {
+      throw new Error('Mustache fallback');
+    }
+  } catch (err) {
+    if (isSystem) {
+      html = `<div class="chat-system-pill"><i class="fa-solid fa-circle-info text-info me-1"></i> ${escapeHtml(message.text)}</div>`;
+    } else {
+      html = `
+        <div class="chat-message-pill ${isMe ? 'me' : ''}">
+          <div class="chat-author">
+            ${escapeHtml(message.username || 'User')} ${isHostMsg ? '<span class="chat-author-badge">Host</span>' : ''} <span class="chat-time">${timeStr}</span>
+          </div>
+          <div class="chat-text">${escapeHtml(message.text)}</div>
+        </div>
+      `;
+    }
+  }
 
-  $messages.insertAdjacentHTML('beforeend', html);
-  $messages.scrollTop = $messages.scrollHeight;
+  const msgBox = document.querySelector('#messages') || $messages;
+  if (msgBox) {
+    msgBox.insertAdjacentHTML('beforeend', html);
+    msgBox.scrollTop = msgBox.scrollHeight;
+  }
 
   // Unread message counter badge
   const chatTabContent = document.getElementById('tab-content-chat');
@@ -1296,17 +1317,23 @@ function escapeHtml(str) {
 var player;
 
 function applyPendingSync() {
-  if (!pendingSyncState || !player || !isPlayerReady) return;
+  if (!pendingSyncState || !player) return;
   const sync = pendingSyncState;
   pendingSyncState = null;
 
   try {
-    const currentLoadedId = (typeof player.getVideoData === 'function') ? player.getVideoData().video_id : null;
-    if (!currentLoadedId || currentLoadedId !== sync.videoId) {
-      player.loadVideoById(sync.videoId, sync.currentTime);
-      player.playVideo();
-    } else {
-      player.seekTo(sync.currentTime, true);
+    const startTime = sync.currentTime || 0;
+    if (typeof player.loadVideoById === 'function') {
+      const currentLoadedId = (typeof player.getVideoData === 'function') ? player.getVideoData().video_id : null;
+      if (!currentLoadedId || currentLoadedId !== sync.videoId) {
+        player.loadVideoById(sync.videoId, startTime);
+      } else {
+        if (typeof player.seekTo === 'function') {
+          player.seekTo(startTime, true);
+        }
+      }
+    }
+    if (sync.isPlaying && typeof player.playVideo === 'function') {
       player.playVideo();
     }
   } catch (err) {
@@ -1453,7 +1480,7 @@ function onPlayerStateChange(event) {
           if (canControlPlayback() && player && typeof player.getCurrentTime === 'function') {
             socket.emit("videoPlaying", player.getCurrentTime());
           }
-        }, 3000);
+        }, 2000);
       }
     }
   }
@@ -1543,9 +1570,14 @@ socket.on("videoPaused", () => {
 });
 
 socket.on("videoPlaying", (currentTime) => {
-  if (isPlayerReady && player && typeof player.seekTo === 'function' && typeof player.playVideo === 'function') {
-    player.seekTo(currentTime, true);
-    player.playVideo();
+  if (player) {
+    const localTime = (typeof player.getCurrentTime === 'function') ? player.getCurrentTime() : 0;
+    if (Math.abs(localTime - currentTime) > 2.0 && typeof player.seekTo === 'function') {
+      player.seekTo(currentTime, true);
+    }
+    if (typeof player.playVideo === 'function') {
+      player.playVideo();
+    }
   } else {
     if (pendingSyncState) {
       pendingSyncState.currentTime = currentTime;
