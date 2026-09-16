@@ -49,10 +49,8 @@ html, body {
 
 body {
   font-family: var(--font-family);
-  background-color: var(--bg-dark);
-  background-image: 
-    radial-gradient(circle at 15% 15%, rgba(255, 0, 68, 0.08) 0%, transparent 40%),
-    radial-gradient(circle at 85% 85%, rgba(138, 43, 226, 0.08) 0%, transparent 40%);
+  background-color: #0b0f19;
+  background-image: none;
   color: var(--text-main);
   min-height: 100vh;
   line-height: 1.5;
@@ -435,7 +433,15 @@ a:hover {
   display: flex;
   gap: 8px;
   overflow-x: auto;
-  padding-bottom: 6px;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.category-pills::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 .cat-pill {

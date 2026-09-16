@@ -837,6 +837,14 @@ const ROOM_CURATED = [
   { id: "cqGjhVJWtEg", title: "Spider-Man: Across the Spider-Verse", channel: "Sony Pictures", thumbnail: "https://i.ytimg.com/vi/cqGjhVJWtEg/hqdefault.jpg", category: "entertainment" },
   { id: "EXeTwQWrcwY", title: "The Dark Knight (2008) Official Trailer", channel: "Warner Bros.", thumbnail: "https://i.ytimg.com/vi/EXeTwQWrcwY/hqdefault.jpg", category: "entertainment" },
 
+  // 🇮🇳 Elvish Yadav, CarryMinati, Arijit & Popular Creators
+  { id: "1g4373w9n9E", title: "Elvish Yadav - SYSTUMM (Official Music Video)", channel: "Elvish Yadav", thumbnail: "https://i.ytimg.com/vi/1g4373w9n9E/hqdefault.jpg", category: "elvish" },
+  { id: "6cZ2C2b20-o", title: "Elvish Yadav Vlogs - Meeting Bigg Boss Fans", channel: "Elvish Yadav Vlogs", thumbnail: "https://i.ytimg.com/vi/6cZ2C2b20-o/hqdefault.jpg", category: "elvish" },
+  { id: "zzwRbKI2js4", title: "CarryMinati - YALGAAR (Official Music Video)", channel: "CarryMinati", thumbnail: "https://i.ytimg.com/vi/zzwRbKI2js4/hqdefault.jpg", category: "carryminati" },
+  { id: "V7LwfY5U_B8", title: "Arijit Singh - Kesariya (Brahmastra)", channel: "Sony Music India", thumbnail: "https://i.ytimg.com/vi/V7LwfY5U_B8/hqdefault.jpg", category: "arijit" },
+  { id: "vUCMO339vBw", title: "Arijit Singh - Tum Hi Ho (Aashiqui 2)", channel: "T-Series", thumbnail: "https://i.ytimg.com/vi/vUCMO339vBw/hqdefault.jpg", category: "arijit" },
+  { id: "hXh35C26570", title: "Sidhu Moose Wala - 295 (Official Audio)", channel: "Sidhu Moose Wala", thumbnail: "https://i.ytimg.com/vi/hXh35C26570/hqdefault.jpg", category: "punjabi" },
+
   // 🔥 Trending
   { id: "dQw4w9WgXcQ", title: "Rick Astley - Never Gonna Give You Up", channel: "Rick Astley", thumbnail: "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg", category: "trending" },
   { id: "0e3GPea1Tyg", title: "MrBeast - $1 vs $500,000,000 Plane Ticket!", channel: "MrBeast", thumbnail: "https://i.ytimg.com/vi/0e3GPea1Tyg/hqdefault.jpg", category: "trending" }
@@ -853,22 +861,9 @@ const roomCategoryFilterMap = {
 };
 
 function initRoomVideoFeed() {
-  const searchInput = document.getElementById('room-search-input');
   const pillsContainer = document.getElementById('room-category-pills');
 
   fetchRoomYouTubeVideos();
-
-  let searchTimer;
-  if (searchInput) {
-    searchInput.addEventListener('input', (e) => {
-      clearTimeout(searchTimer);
-      searchTimer = setTimeout(() => {
-        const q = e.target.value.trim();
-        if (q) fetchRoomYouTubeVideos(q);
-        else renderRoomVideoGrid(ROOM_CURATED);
-      }, 400);
-    });
-  }
 
   if (pillsContainer) {
     pillsContainer.addEventListener('click', (e) => {
@@ -896,7 +891,7 @@ async function fetchRoomYouTubeVideos(query = 'famous_english') {
   const apiKey = localStorage.getItem('YOUTUBE_API_KEY') || window.ENV_YOUTUBE_API_KEY || '';
   const actualQuery = categoryQueryMap[query] || query;
   
-  // 1. Official YouTube Data API v3 using universal system key
+  // 1. Official YouTube Data API
   if (apiKey) {
     try {
       const apiUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=12&q=${encodeURIComponent(actualQuery)}&type=video&videoEmbeddable=true&key=${apiKey}`;
@@ -922,7 +917,33 @@ async function fetchRoomYouTubeVideos(query = 'famous_english') {
     }
   }
 
-  // 2. Category Filter Lookup
+  // 2. Public Invidious / Piped API Search Proxy
+  try {
+    const res = await fetch(`https://pipedapi.kavin.rocks/search?q=${encodeURIComponent(actualQuery)}&filter=videos`);
+    const data = await res.json();
+    if (data.items && data.items.length > 0) {
+      const formatted = data.items
+        .filter(item => item.url && item.url.includes('/watch?v='))
+        .slice(0, 12)
+        .map(item => {
+          const vId = item.url.split('v=')[1];
+          return {
+            id: vId,
+            title: item.title,
+            channel: item.uploaderName || 'YouTube',
+            thumbnail: item.thumbnail || `https://img.youtube.com/vi/${vId}/mqdefault.jpg`
+          };
+        });
+      if (formatted.length > 0) {
+        renderRoomVideoGrid(formatted);
+        return;
+      }
+    }
+  } catch (e) {
+    // Ignore fallback to local search
+  }
+
+  // 3. Category & Local Multi-Keyword Fuzzy Lookup
   const filterFn = roomCategoryFilterMap[query];
   if (filterFn) {
     const filtered = ROOM_CURATED.filter(filterFn);
@@ -932,13 +953,13 @@ async function fetchRoomYouTubeVideos(query = 'famous_english') {
     }
   }
 
-  // 3. Fallback to general search query matching
-  const qLower = query.toLowerCase();
-  const filtered = ROOM_CURATED.filter(v =>
-    v.title.toLowerCase().includes(qLower) ||
-    (v.category && v.category.toLowerCase().includes(qLower)) ||
-    v.channel.toLowerCase().includes(qLower)
-  );
+  const qLower = actualQuery.toLowerCase().trim();
+  const terms = qLower.split(/\s+/);
+  const filtered = ROOM_CURATED.filter(v => {
+    const target = `${v.title} ${v.channel} ${v.category || ''} ${v.id}`.toLowerCase();
+    return terms.some(term => target.includes(term));
+  });
+
   renderRoomVideoGrid(filtered.length > 0 ? filtered : ROOM_CURATED);
 }
 
