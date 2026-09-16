@@ -252,6 +252,10 @@ function playNextVideo() {
     const nextVideo = playlistQueue.shift();
     currentVideoObj = nextVideo;
     loadVideoInPlayer(nextVideo);
+    if (canControlPlayback()) {
+      socket.emit("playVideoDirectly", nextVideo);
+      socket.emit("playlistUpdated", playlistQueue);
+    }
     displayPlaylist();
   } else {
     // Autoplay next video from catalog, ALWAYS selecting a DIFFERENT video
@@ -270,6 +274,9 @@ function playNextVideo() {
       if (currentVideoObj) historyQueue.push(currentVideoObj);
       currentVideoObj = videoObj;
       loadVideoInPlayer(videoObj);
+      if (canControlPlayback()) {
+        socket.emit("playVideoDirectly", videoObj);
+      }
       showToast(`Autoplaying Next: ${autoNext.title}`, "fa-play");
     }
   }
@@ -1083,11 +1090,10 @@ function initYouTubePlayer(videoId) {
         'playsinline': 1,
         'controls': control,
         'enablejsapi': 1,
-        'origin': window.location.origin,
         'start': 0,
         'disablekb': 0,
         'rel': 0,
-        'autoplay': 0
+        'autoplay': 1
       },
       events: {
         'onReady': onPlayerReady,
@@ -1111,10 +1117,17 @@ if (firstScriptTag && firstScriptTag.parentNode) {
 
 function onPlayerError(event) {
   console.warn("YouTube player error (video unavailable/restricted):", event.data);
-  showToast("Video unavailable/restricted, autoplaying next video...", "fa-forward");
-  setTimeout(() => {
-    playNextVideo();
-  }, 800);
+  if (canControlPlayback()) {
+    showToast("Host video restricted, autoplaying next video...", "fa-forward");
+    setTimeout(() => {
+      playNextVideo();
+    }, 800);
+  } else {
+    showToast("Playback error on your browser. Resyncing with Host...", "fa-rotate");
+    if (roomid) {
+      socket.emit("joinRoom", { username, roomid });
+    }
+  }
 }
 
 function onPlayerReady(event) {
