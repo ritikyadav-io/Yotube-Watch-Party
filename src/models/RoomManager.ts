@@ -85,15 +85,9 @@ export class RoomManager {
 
         let room = this.rooms.get(roomId);
 
-        // If room does not exist yet, auto-create it with this roomId as host
+        // If room does not exist, return error (only createRoom socket handler creates a room)
         if (!room) {
-            const rawName = (username && typeof username === 'string') ? username.trim() : '';
-            const hostName = rawName || `Host-${socketId.substring(0, 4)}`;
-            const host = new Participant(socketId, hostName, roomId, Role.HOST);
-            room = new Room(roomId, host);
-            this.rooms.set(roomId, room);
-            this.socketToRoom.set(socketId, roomId);
-            return { success: true, room, participant: host };
+            return { success: false, error: "Room does not exist or has expired. Please check the room code." };
         }
 
         // Enforce maximum limit of 5 participants per room

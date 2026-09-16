@@ -9,7 +9,13 @@ var serverUrl = window.location.hostname.includes('vercel.app')
 var socket = io(serverUrl, {
   transports: ['websocket', 'polling'],
   timeout: 10000,
-  reconnectionAttempts: 5
+  reconnectionAttempts: 10
+});
+
+socket.on('connect', () => {
+  if (roomid && username) {
+    socket.emit("joinRoom", { username, roomid });
+  }
 });
 
 // UI Element Handles
@@ -303,6 +309,10 @@ function playPreviousVideo() {
     const prevVideo = historyQueue.pop();
     currentVideoObj = prevVideo;
     loadVideoInPlayer(prevVideo);
+    if (canControlPlayback()) {
+      socket.emit("playVideoDirectly", prevVideo);
+      socket.emit("playlistUpdated", playlistQueue);
+    }
     displayPlaylist();
   } else {
     if (ROOM_CURATED && ROOM_CURATED.length > 0) {
@@ -317,8 +327,12 @@ function playPreviousVideo() {
         video_url: `https://www.youtube.com/watch?v=${autoPrev.id}`,
         video_id: autoPrev.id
       };
+      if (currentVideoObj) playlistQueue.unshift(currentVideoObj);
       currentVideoObj = videoObj;
       loadVideoInPlayer(videoObj);
+      if (canControlPlayback()) {
+        socket.emit("playVideoDirectly", videoObj);
+      }
       showToast(`Playing Previous: ${autoPrev.title}`, "fa-backward-step");
     }
   }
