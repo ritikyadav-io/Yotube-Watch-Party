@@ -1080,18 +1080,21 @@ function appendRoomVideoGrid(videos) {
 }
 
 async function fetchRoomYouTubeVideos(query = 'hindi_hits', isUserSearch = false) {
+  const isPresetCategory = Boolean(roomCategoryFilterMap[query] || categoryQueryMap[query]);
+  const isCustomSearch = !isPresetCategory || isUserSearch;
+
   // 1. Immediately render local curated videos with 0ms delay so mobile users never experience blank pages or frozen UI
   const filterFn = roomCategoryFilterMap[query];
   let localMatches = filterFn ? ROOM_CURATED.filter(filterFn) : [];
   if (localMatches.length === 0) {
     const qLower = (categoryQueryMap[query] || query).toLowerCase().trim();
-    const terms = qLower.split(/\s+/);
+    const terms = qLower.split(/\s+/).filter(Boolean);
     localMatches = ROOM_CURATED.filter(v => {
       const target = `${v.title} ${v.channel} ${v.category || ''} ${v.id}`.toLowerCase();
       return terms.some(term => target.includes(term));
     });
   }
-  renderRoomVideoGrid(localMatches.length > 0 ? localMatches : ROOM_CURATED, isUserSearch);
+  renderRoomVideoGrid(localMatches.length > 0 ? localMatches : ROOM_CURATED, isUserSearch, isCustomSearch);
 
   const apiKey = localStorage.getItem('YOUTUBE_API_KEY') || window.ENV_YOUTUBE_API_KEY || '';
   const actualQuery = categoryQueryMap[query] || query;
@@ -1103,7 +1106,7 @@ async function fetchRoomYouTubeVideos(query = 'hindi_hits', isUserSearch = false
     });
     const data = await res.json();
     if (data.success && data.videos && data.videos.length > 0) {
-      renderRoomVideoGrid(data.videos, isUserSearch);
+      renderRoomVideoGrid(data.videos, isUserSearch, isCustomSearch);
       return;
     }
   } catch (err) {
@@ -1111,7 +1114,7 @@ async function fetchRoomYouTubeVideos(query = 'hindi_hits', isUserSearch = false
   }
 }
 
-function renderRoomVideoGrid(videos, isUserSearch = false) {
+function renderRoomVideoGrid(videos, isUserSearch = false, isCustomSearch = false) {
   const grid = document.getElementById('room-video-grid');
   if (!grid) return;
   grid.innerHTML = '';
@@ -1130,12 +1133,15 @@ function renderRoomVideoGrid(videos, isUserSearch = false) {
     uniqueList = uniqueList.filter(v => v.id !== currentVideoObj.video_id);
   }
 
-  // Shuffle/rotate dynamically so suggestions always vary
-  uniqueList.sort(() => Math.random() - 0.5);
+  // Shuffle/rotate dynamically ONLY for default category views, NEVER for live user search queries
+  if (!isUserSearch && !isCustomSearch) {
+    uniqueList.sort(() => Math.random() - 0.5);
+  }
 
   if (isUserSearch) {
     setTimeout(() => {
-      grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const section = grid.closest('section') || grid;
+      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 100);
   }
 
