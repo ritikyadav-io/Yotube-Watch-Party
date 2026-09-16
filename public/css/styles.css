@@ -1135,8 +1135,19 @@ a:hover {
     margin-bottom: 0.5rem !important;
   }
   .navbar-brand-custom {
-    font-size: 0.95rem !important;
-    gap: 6px !important;
+    font-size: 0.92rem !important;
+    white-space: nowrap !important;
+  }
+  .navbar-brand-custom img {
+    display: none !important;
+  }
+  #nav-github-link, #nav-linkedin-link {
+    padding: 0.35rem 0.55rem !important;
+    height: 32px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 50px !important;
   }
   #room-brand-logo {
     order: 1 !important;
