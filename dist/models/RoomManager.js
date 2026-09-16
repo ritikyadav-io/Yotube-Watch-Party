@@ -83,18 +83,28 @@ class RoomManager {
         }
         const rawName = (username && typeof username === 'string') ? username.trim() : '';
         const baseName = rawName || `Guest-${socketId.substring(0, 4)}`;
-        // If host or existing participant is reconnecting, re-associate them with existing room
+        // Check if reconnecting user is the Room Host
         let roleToAssign = Participant_1.Role.PARTICIPANT;
-        if (room.participants.size === 0) {
+        const isHostReconnecting = (room.hostUsername && room.hostUsername.toLowerCase() === baseName.toLowerCase()) ||
+            room.participants.size === 0 ||
+            !room.participants.has(room.hostSocketId);
+        if (isHostReconnecting) {
             roleToAssign = Participant_1.Role.HOST;
             room.hostSocketId = socketId;
+            room.hostUsername = baseName;
+            if (room.hostDisconnectTimer) {
+                clearTimeout(room.hostDisconnectTimer);
+                room.hostDisconnectTimer = null;
+            }
         }
-        // Auto-disambiguate duplicate names (e.g. "Alex" -> "Alex (1)")
+        // Auto-disambiguate duplicate names if not the host reconnecting
         let finalName = baseName;
-        let counter = 1;
-        while (room.getParticipantsList().some(p => p.username.toLowerCase() === finalName.toLowerCase())) {
-            finalName = `${baseName} (${counter})`;
-            counter++;
+        if (!isHostReconnecting) {
+            let counter = 1;
+            while (room.getParticipantsList().some(p => p.username.toLowerCase() === finalName.toLowerCase())) {
+                finalName = `${baseName} (${counter})`;
+                counter++;
+            }
         }
         const participant = new Participant_1.Participant(socketId, finalName, roomId, roleToAssign);
         room.addParticipant(participant);

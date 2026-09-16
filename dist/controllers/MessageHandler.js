@@ -198,10 +198,17 @@ class MessageHandler {
                 if (!req)
                     return;
                 // Send request notification to Host and Moderators
+                let sentToHost = false;
                 room.participants.forEach(p => {
                     if (p.role === Participant_1.Role.HOST || p.role === Participant_1.Role.MODERATOR) {
                         this.io.to(p.id).emit("approval_request_received", req);
+                        sentToHost = true;
                     }
+                });
+                // Acknowledge to requesting participant
+                socket.emit("request_sent_acknowledgement", {
+                    message: "Request sent to Host! Waiting for approval...",
+                    req
                 });
             });
             socket.on("handle_request", (data) => {
@@ -215,13 +222,31 @@ class MessageHandler {
                 }
                 const req = res.req;
                 if (data.approve) {
-                    if (req.type === 'change_video') {
+                    if (req.type === 'change_video' && req.payload) {
                         room.playbackState.videoId = req.payload.video_id;
+                        room.playbackState.videoObj = req.payload;
+                        room.playbackState.currentTime = 0;
+                        room.playbackState.isPlaying = true;
+                        room.playbackState.updatedAt = Date.now();
                         this.io.to(room.id).emit("playVideoDirectly", req.payload);
                     }
                     this.io.to(room.id).emit("message", {
                         username: "System",
                         text: `Host approved ${req.username}'s video request!`
+                    });
+                    this.io.to(req.participantSocketId).emit("request_result", {
+                        approved: true,
+                        message: "Host approved your video request!"
+                    });
+                }
+                else {
+                    this.io.to(room.id).emit("message", {
+                        username: "System",
+                        text: `Host declined ${req.username}'s request.`
+                    });
+                    this.io.to(req.participantSocketId).emit("request_result", {
+                        approved: false,
+                        message: "Host declined your video request."
                     });
                 }
             });

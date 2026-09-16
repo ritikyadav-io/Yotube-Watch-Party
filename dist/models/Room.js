@@ -8,8 +8,11 @@ class Room {
         this.playlist = [];
         this.history = [];
         this.pendingRequests = new Map();
+        this.hostUsername = '';
+        this.hostDisconnectTimer = null;
         this.id = id;
         this.hostSocketId = hostParticipant.id;
+        this.hostUsername = hostParticipant.username;
         hostParticipant.role = Participant_1.Role.HOST;
         this.participants.set(hostParticipant.id, hostParticipant);
         const defaultVideo = {
@@ -20,11 +23,11 @@ class Room {
             video_id: "L7mfjvdnPno"
         };
         this.playbackState = {
-            videoId: 'L7mfjvdnPno',
+            videoId: defaultVideo.video_id,
             videoObj: defaultVideo,
             currentTime: 0,
             isPlaying: true,
-            lastUpdatedBy: hostParticipant.username,
+            lastUpdatedBy: hostParticipant.id,
             updatedAt: Date.now()
         };
     }
@@ -33,6 +36,7 @@ class Room {
         if (this.participants.size === 0) {
             participant.role = Participant_1.Role.HOST;
             this.hostSocketId = participant.id;
+            this.hostUsername = participant.username;
         }
         else {
             participant.role = Participant_1.Role.PARTICIPANT;
@@ -44,9 +48,17 @@ class Room {
         if (!participant)
             return undefined;
         this.participants.delete(socketId);
-        // Auto-transfer Host if Host left the room
+        // 15-second grace period before auto-transferring Host role on Host disconnection
         if (socketId === this.hostSocketId && this.participants.size > 0) {
-            this.autoTransferHost();
+            if (this.hostDisconnectTimer) {
+                clearTimeout(this.hostDisconnectTimer);
+            }
+            this.hostDisconnectTimer = setTimeout(() => {
+                if (this.participants.size > 0 && !this.participants.has(this.hostSocketId)) {
+                    this.autoTransferHost();
+                }
+                this.hostDisconnectTimer = null;
+            }, 15000);
         }
         return participant;
     }

@@ -829,18 +829,48 @@ socket.on("participant_removed", (data) => {
   showToast(`User ${data.username} removed from room.`, "fa-user-xmark");
 });
 
+// Request Acknowledgements & Results for Participants
+socket.on("request_sent_acknowledgement", (data) => {
+  showToast(data.message || "Request sent to Host!", "fa-paper-plane");
+});
+
+socket.on("request_result", (data) => {
+  if (data.approved) {
+    showToast(data.message || "Host approved your request!", "fa-circle-check");
+  } else {
+    swal("Request Declined", data.message || "Host declined your video request.", "info");
+  }
+});
+
 // Approval Request handling for Host/Moderator
 socket.on("approval_request_received", (req) => {
+  if (!req) return;
+  const videoTitle = (req.payload && req.payload.title) ? req.payload.title : 'Selected Video';
+
+  // 1. Interactive SweetAlert modal for Host
+  swal({
+    title: "🎵 Song Approval Request",
+    text: `${req.username} requested to play:\n"${videoTitle}"\n\nDo you approve?`,
+    icon: "info",
+    buttons: {
+      cancel: { text: "Decline", value: false, visible: true },
+      confirm: { text: "Approve & Play", value: true }
+    }
+  }).then((willApprove) => {
+    socket.emit("handle_request", { requestId: req.id, approve: Boolean(willApprove) });
+  });
+
+  // 2. Sidebar banner container
   const container = document.getElementById('approval-requests-container');
   if (!container) return;
 
   const banner = document.createElement('div');
-  banner.className = 'approval-request-banner';
+  banner.className = 'approval-request-banner mb-2 p-2 rounded border border-warning bg-dark';
   banner.id = `request-${req.id}`;
   banner.innerHTML = `
-    <div class="fs-7 text-white">
-      <i class="fa-solid fa-circle-info text-cyan me-1"></i>
-      <strong>${escapeHtml(req.username)}</strong> requested to ${req.type === 'change_video' ? 'play video' : 'change playback'}.
+    <div class="fs-7 text-white mb-1">
+      <i class="fa-solid fa-circle-info text-warning me-1"></i>
+      <strong>${escapeHtml(req.username)}</strong> requested: "${escapeHtml(videoTitle)}"
     </div>
     <div class="d-flex gap-2">
       <button class="btn-primary-custom btn-sm py-1 px-3 btn-approve-req" data-id="${req.id}">Approve</button>
