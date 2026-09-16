@@ -413,9 +413,12 @@ function addVideoFromUrl(url, autoPlayIfFirst = false) {
         video_id: videoId
       };
 
-      if (autoPlayIfFirst && (!currentVideoObj || currentVideoObj.video_id === 'M7lc1UVf-VE')) {
+      if (autoPlayIfFirst || !currentVideoObj || currentVideoObj.video_id === 'sQVeK7dT18Y') {
         currentVideoObj = video;
         loadVideoInPlayer(video);
+        if (canControlPlayback()) {
+          socket.emit("playVideoDirectly", video);
+        }
       } else {
         playlistQueue.push(video);
         socket.emit("playlistUpdated", playlistQueue);
@@ -431,10 +434,18 @@ function addVideoFromUrl(url, autoPlayIfFirst = false) {
         video_url: url,
         video_id: videoId
       };
-      playlistQueue.push(video);
-      socket.emit("playlistUpdated", playlistQueue);
-      displayPlaylist();
-      showToast("Video Added to Playlist Queue!");
+      if (autoPlayIfFirst || !currentVideoObj || currentVideoObj.video_id === 'sQVeK7dT18Y') {
+        currentVideoObj = video;
+        loadVideoInPlayer(video);
+        if (canControlPlayback()) {
+          socket.emit("playVideoDirectly", video);
+        }
+      } else {
+        playlistQueue.push(video);
+        socket.emit("playlistUpdated", playlistQueue);
+        displayPlaylist();
+        showToast("Video Added to Playlist Queue!");
+      }
     });
 }
 
@@ -933,6 +944,27 @@ function renderRoomVideoGrid(videos) {
         </div>
       </div>
     `;
+
+    card.addEventListener('click', () => {
+      const videoObj = {
+        title: video.title,
+        channel: video.channel,
+        thumbnail_url: video.thumbnail,
+        video_url: `https://www.youtube.com/watch?v=${video.id}`,
+        video_id: video.id
+      };
+
+      if (!canControlPlayback()) {
+        requestPlaybackAction('change_video', videoObj);
+        return;
+      }
+
+      if (currentVideoObj) historyQueue.push(currentVideoObj);
+      currentVideoObj = videoObj;
+      loadVideoInPlayer(videoObj);
+      socket.emit("playVideoDirectly", videoObj);
+      showToast("Playing Video in App!");
+    });
 
     card.querySelector('.btn-play-now').addEventListener('click', (e) => {
       e.stopPropagation();
