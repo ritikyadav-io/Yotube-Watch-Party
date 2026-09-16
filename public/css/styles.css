@@ -51,7 +51,7 @@ body {
   color: var(--text-main);
   min-height: 100vh;
   line-height: 1.5;
-  padding-top: 64px;
+  padding-top: 0;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -103,24 +103,19 @@ a:hover {
   box-shadow: var(--shadow-main);
 }
 
-/* Smart Hiding Navbar - Fixed & Smooth */
+/* Sticky Navbar - Prevents Content & Video Overlap */
 .navbar-custom {
   background: rgba(9, 13, 22, 0.95);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--border-glass);
-  padding: 0.35rem 1rem;
-  position: fixed;
+  padding: 0.5rem 1rem;
+  position: sticky;
   top: 0;
   left: 0;
   right: 0;
   z-index: 1000;
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  transform: translateY(0);
-}
-
-.navbar-custom.navbar-hidden {
-  transform: translateY(-100%);
+  margin-bottom: 1rem;
 }
 
 .navbar-brand-custom {
@@ -596,12 +591,14 @@ a:hover {
 .sidebar-panel {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  height: 560px;
   max-height: 720px;
+  overflow: hidden;
 }
 
 .sidebar-tabs {
   display: flex;
+  flex-shrink: 0;
   border-bottom: 1px solid var(--border-glass);
   padding: 8px 12px;
   gap: 6px;
@@ -637,24 +634,30 @@ a:hover {
 }
 
 .tab-content-area {
-  flex-grow: 1;
-  overflow-y: auto;
-  padding: 1rem;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0.85rem;
 }
 
 /* Chat Messages */
 .chat-container {
   display: flex;
   flex-direction: column;
-  height: 480px;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
 }
 
 .chat-messages-box {
-  flex-grow: 1;
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   padding-right: 4px;
 }
 
@@ -937,20 +940,20 @@ a:hover {
 /* Responsive adjustments & Mobile Optimization */
 @media (max-width: 991px) {
   body {
-    padding-top: 70px;
+    padding-top: 0 !important;
   }
   .hero-title {
     font-size: 2.25rem;
   }
   .sidebar-panel {
-    max-height: 520px;
+    height: 480px;
     margin-top: 1rem;
   }
 }
 
 @media (max-width: 768px) {
   body {
-    padding-top: 76px;
+    padding-top: 0 !important;
   }
   .hero-title {
     font-size: 1.85rem;
@@ -963,12 +966,67 @@ a:hover {
   .room-card {
     padding: 1.25rem;
   }
-  .header-url-form {
-    max-width: 100%;
-    margin-top: 0.5rem;
-  }
   .navbar-custom {
     padding: 0.5rem 0.75rem;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+  }
+  .header-url-form {
+    order: 3;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-top: 0.35rem !important;
+  }
+  .video-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+  }
+  .video-info-body {
+    padding: 0.6rem !important;
+  }
+  .video-title-text {
+    font-size: 0.78rem !important;
+    line-height: 1.25 !important;
+    margin-bottom: 0.25rem !important;
+    height: 2.5em;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .video-channel-text {
+    font-size: 0.7rem !important;
+    margin-bottom: 0.4rem !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .video-card-actions {
+    flex-direction: column !important;
+    gap: 4px !important;
+  }
+  .btn-card-action {
+    padding: 4px 6px !important;
+    font-size: 0.7rem !important;
+    width: 100% !important;
+  }
+  .sidebar-panel {
+    height: 460px !important;
+    margin-top: 1rem;
+  }
+  .cat-pill {
+    padding: 4px 10px !important;
+    font-size: 0.75rem !important;
+  }
+  .section-header {
+    gap: 0.5rem !important;
+    margin-bottom: 1rem !important;
+  }
+  .search-box-container {
+    max-width: 100% !important;
+    width: 100% !important;
   }
   .toast-container-custom {
     right: 12px;
@@ -994,5 +1052,8 @@ a:hover {
   }
   .form-control-custom {
     font-size: 0.9rem;
+  }
+  .sidebar-panel {
+    height: 440px !important;
   }
 }
