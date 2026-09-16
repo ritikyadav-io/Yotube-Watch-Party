@@ -1071,20 +1071,23 @@ socket.on("sync_state", (state) => {
   if (!state || !state.videoId) return;
   const targetVideoId = state.videoId;
 
-  const match = ROOM_CURATED.find(v => v.id === targetVideoId);
-  const videoObj = match ? {
-    title: match.title,
-    channel: match.channel,
-    thumbnail_url: match.thumbnail,
-    video_url: `https://www.youtube.com/watch?v=${match.id}`,
-    video_id: match.id
-  } : {
-    title: "Synchronized Video Stream",
-    channel: "Watch Party Stream",
-    thumbnail_url: `https://i.ytimg.com/vi/${targetVideoId}/hqdefault.jpg`,
-    video_url: `https://www.youtube.com/watch?v=${targetVideoId}`,
-    video_id: targetVideoId
-  };
+  let videoObj = state.videoObj;
+  if (!videoObj) {
+    const match = ROOM_CURATED.find(v => v.id === targetVideoId);
+    videoObj = match ? {
+      title: match.title,
+      channel: match.channel,
+      thumbnail_url: match.thumbnail,
+      video_url: `https://www.youtube.com/watch?v=${match.id}`,
+      video_id: match.id
+    } : {
+      title: "Shawn Mendes - Treat You Better",
+      channel: "Shawn Mendes",
+      thumbnail_url: `https://i.ytimg.com/vi/${targetVideoId}/hqdefault.jpg`,
+      video_url: `https://www.youtube.com/watch?v=${targetVideoId}`,
+      video_id: targetVideoId
+    };
+  }
 
   loadVideoInPlayer(videoObj);
 

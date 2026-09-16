@@ -12,8 +12,16 @@ class Room {
         this.hostSocketId = hostParticipant.id;
         hostParticipant.role = Participant_1.Role.HOST;
         this.participants.set(hostParticipant.id, hostParticipant);
+        const defaultVideo = {
+            title: "Shawn Mendes - Treat You Better",
+            channel: "Shawn Mendes",
+            thumbnail_url: "https://i.ytimg.com/vi/sQVeK7dT18Y/hqdefault.jpg",
+            video_url: "https://www.youtube.com/watch?v=sQVeK7dT18Y",
+            video_id: "sQVeK7dT18Y"
+        };
         this.playbackState = {
-            videoId: 'KJgsSFOSQv0',
+            videoId: 'sQVeK7dT18Y',
+            videoObj: defaultVideo,
             currentTime: 0,
             isPlaying: false,
             lastUpdatedBy: hostParticipant.username,

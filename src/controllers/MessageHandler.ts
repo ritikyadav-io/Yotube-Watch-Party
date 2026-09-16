@@ -131,6 +131,9 @@ export class MessageHandler {
                 }
 
                 room.playbackState.videoId = videoObj.video_id;
+                room.playbackState.videoObj = videoObj;
+                room.playbackState.currentTime = 0;
+                room.playbackState.updatedAt = Date.now();
                 socket.to(room.id).emit("playVideoDirectly", videoObj);
             });
 
