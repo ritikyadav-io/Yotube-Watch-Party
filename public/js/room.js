@@ -84,9 +84,9 @@ document.addEventListener('DOMContentLoaded', () => {
   initEmojiBar();
   initialSetup();
 
-  if (typeof YT !== 'undefined' && YT.Player) {
-    initYouTubePlayer();
-  }
+  ensureYouTubePlayerLoaded();
+  setTimeout(ensureYouTubePlayerLoaded, 500);
+  setTimeout(ensureYouTubePlayerLoaded, 1500);
 });
 
 function initSmartNavbarScroll() {
@@ -1127,53 +1127,58 @@ function applyPendingSync() {
   }
 }
 
-function initYouTubePlayer(videoId) {
+function ensureYouTubePlayerLoaded(videoId) {
   const vidToPlay = videoId || (currentVideoObj ? currentVideoObj.video_id : 'JGwWNGJdvx8');
 
   if (player) {
     if (isPlayerReady && typeof player.loadVideoById === 'function') {
-      player.loadVideoById(vidToPlay, 0);
-      player.playVideo();
+      try {
+        player.loadVideoById(vidToPlay, 0);
+      } catch (e) {}
     }
     return;
   }
 
   if (typeof YT !== 'undefined' && YT.Player) {
-    player = new YT.Player('player', {
-      height: '450',
-      width: '800',
-      videoId: vidToPlay,
-      host: 'https://www.youtube.com',
-      playerVars: {
-        'playsinline': 1,
-        'controls': control,
-        'enablejsapi': 1,
-        'origin': window.location.origin,
-        'start': 0,
-        'disablekb': 0,
-        'rel': 0,
-        'autoplay': 1,
-        'modestbranding': 1
-      },
-      events: {
-        'onReady': onPlayerReady,
-        'onStateChange': onPlayerStateChange,
-        'onError': onPlayerError
-      }
-    });
+    try {
+      player = new YT.Player('player', {
+        height: '100%',
+        width: '100%',
+        videoId: vidToPlay,
+        playerVars: {
+          'playsinline': 1,
+          'controls': 1,
+          'enablejsapi': 1,
+          'rel': 0,
+          'modestbranding': 1,
+          'autoplay': 1
+        },
+        events: {
+          'onReady': onPlayerReady,
+          'onStateChange': onPlayerStateChange,
+          'onError': onPlayerError
+        }
+      });
+      return;
+    } catch (err) {
+      console.warn("YT.Player init failed, using iframe fallback:", err);
+    }
+  }
+
+  // Mobile/Network Fallback: Direct iframe embed if YT.Player API script hasn't loaded
+  const playerContainer = document.getElementById('player');
+  if (playerContainer && !playerContainer.querySelector('iframe')) {
+    playerContainer.innerHTML = `<iframe id="fallback-yt-iframe" style="width:100%; height:100%; border:0; position:absolute; top:0; left:0;" src="https://www.youtube.com/embed/${vidToPlay}?autoplay=1&playsinline=1&enablejsapi=1" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
   }
 }
 
-window.onYouTubeIframeAPIReady = function () {
-  initYouTubePlayer();
-};
-
-var tag = document.createElement('script');
-tag.src = "https://www.youtube.com/iframe_api";
-var firstScriptTag = document.getElementsByTagName('script')[0];
-if (firstScriptTag && firstScriptTag.parentNode) {
-  firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+function initYouTubePlayer(videoId) {
+  ensureYouTubePlayerLoaded(videoId);
 }
+
+window.onYouTubeIframeAPIReady = function () {
+  ensureYouTubePlayerLoaded();
+};
 
 function onPlayerError(event) {
   console.warn("YouTube player error code:", event.data);
