@@ -103,6 +103,45 @@ const categoryQueryMap = {
   'gaming': 'GTA VI trailer gaming'
 };
 
+function initApiKeyManager() {
+  const inputKey = document.getElementById('youtube-api-key-input');
+  const savedKey = localStorage.getItem('YOUTUBE_API_KEY');
+  if (savedKey && inputKey) inputKey.value = savedKey;
+}
+
+function initVideoFeed() {
+  fetchYouTubeVideos('famous_english');
+}
+
+function initRoomForms() {
+  const formJoin = document.getElementById('form-join-room');
+  if (formJoin) {
+    formJoin.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const username = document.getElementById('join-username')?.value.trim() || 'Guest';
+      const roomid = document.getElementById('join-roomid')?.value.trim();
+      if (!roomid) {
+        if (window.swal) {
+          swal("Room Required", "Please enter a valid Room ID to join.", "warning");
+        } else {
+          alert("Please enter a valid Room ID to join.");
+        }
+        return;
+      }
+      window.location.href = `/room.html?username=${encodeURIComponent(username)}&roomid=${encodeURIComponent(roomid)}`;
+    });
+  }
+
+  const formCreate = document.getElementById('form-create-room');
+  if (formCreate) {
+    formCreate.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const username = document.getElementById('create-username')?.value.trim() || 'Host';
+      window.location.href = `/room.html?username=${encodeURIComponent(username)}`;
+    });
+  }
+}
+
 // Fetch from YouTube Data API v3 using user/env key, or curated fallback catalog
 async function fetchYouTubeVideos(query = 'famous_english') {
   const apiKey = localStorage.getItem('YOUTUBE_API_KEY') || window.ENV_YOUTUBE_API_KEY || '';
@@ -154,7 +193,6 @@ async function fetchYouTubeVideos(query = 'famous_english') {
   );
   
   renderVideoGrid(filtered.length > 0 ? filtered : CURATED_VIDEOS);
-} : CURATED_VIDEOS);
 }
 
 // Render video items in responsive grid
