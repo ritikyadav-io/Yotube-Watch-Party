@@ -70,7 +70,7 @@ function showToast(msg, icon = 'fa-circle-check') {
 // --------------------------------------------------------------------------
 document.addEventListener('DOMContentLoaded', () => {
   const greetEl = document.getElementById('greeting-text') || $greet;
-  if (greetEl) greetEl.textContent = `User: ${username}`;
+  if (greetEl) greetEl.innerHTML = `<i class="fa-solid fa-user me-1 text-muted"></i> User: ${escapeHtml(username)}`;
 
   initApiKeyManager();
   initCopyButtons();

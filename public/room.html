@@ -86,32 +86,43 @@
           <div class="player-control-bar">
             <div class="player-controls-left">
               <!-- Previous Video Button -->
-              <button class="btn-secondary-custom btn-sm" id="prev-video" title="Previous Video in Queue">
+              <button class="btn-player btn-player-prev" id="prev-video" title="Previous Video in Queue">
                 <i class="fa-solid fa-backward-step"></i> Previous
               </button>
 
               <!-- Next Video Button -->
-              <button class="btn-primary-custom btn-sm" id="next-video" title="Next Video in Queue">
+              <button class="btn-player btn-player-next" id="next-video" title="Next Video in Queue">
                 Next <i class="fa-solid fa-forward-step"></i>
               </button>
             </div>
 
-            <!-- Sync Live Indicator -->
-            <div class="d-flex align-items-center gap-3">
+            <!-- Sync Live Indicator & User Info -->
+            <div class="d-flex align-items-center gap-2 flex-wrap">
               <span class="sync-badge" id="sync-status">
                 <span class="sync-dot"></span> Sync Active
               </span>
-              <span class="text-muted fs-7" id="greeting-text">User: Guest</span>
+              <span class="user-badge" id="greeting-text">
+                <i class="fa-solid fa-user me-1 text-muted"></i> User: Guest
+              </span>
             </div>
           </div>
         </div>
 
         <!-- Currently Playing Video Meta -->
-        <div class="glass-panel p-3 my-2 my-md-3">
-          <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
-            <div>
-              <h1 class="h4 mb-1" id="video-title">YouTube Watch Party Player</h1>
-              <p class="text-muted mb-0 fs-6" id="channel-name"><i class="fa-solid fa-circle-check text-primary me-1"></i> Synchronized Stream</p>
+        <div class="glass-panel p-3 my-2 my-md-3 now-playing-card">
+          <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <div class="flex-grow-1 min-w-0">
+              <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                <span class="badge bg-danger text-uppercase px-2 py-1 fs-8 fw-bold" style="border-radius: 4px; letter-spacing: 0.5px;">
+                  <i class="fa-solid fa-circle-play me-1"></i> Now Playing
+                </span>
+                <span class="text-muted fs-7" id="channel-name">
+                  <i class="fa-solid fa-circle-check text-primary me-1"></i> Synchronized Stream
+                </span>
+              </div>
+              <h1 class="h5 mb-0 text-white fw-bold" id="video-title" style="line-height: 1.4; word-break: break-word;">
+                YouTube Watch Party Player
+              </h1>
             </div>
           </div>
         </div>
