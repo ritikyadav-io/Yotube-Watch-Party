@@ -201,12 +201,9 @@ const categoryQueryMap = {
   'gaming': 'GTA VI trailer gaming'
 };
 
-const SYSTEM_YOUTUBE_API_KEY = "AIzaSyBrsPDTGXFqmvogUIhEiWDZGKPzi3yu1kQ";
-
-// Fetch from YouTube Data API v3 using system key, or public search API fallback
+// Fetch from YouTube Data API v3 using user/env key, or curated fallback catalog
 async function fetchYouTubeVideos(query = 'famous_english') {
-  localStorage.removeItem('YOUTUBE_API_KEY');
-  const apiKey = SYSTEM_YOUTUBE_API_KEY;
+  const apiKey = localStorage.getItem('YOUTUBE_API_KEY') || window.ENV_YOUTUBE_API_KEY || '';
   const actualQuery = categoryQueryMap[query] || query;
   
   // 1. Official YouTube Data API v3 Query

@@ -4,9 +4,10 @@
 
 ---
 
-## 🌐 Live Deployment & Demo URL
-- **Public Live Application URL:** [https://youtube-party-watch.onrender.com](https://youtube-party-watch.onrender.com) *(Replace with your live Render/Vercel link)*
-- **GitHub Repository:** [https://github.com/ritikyadav-io/Yotube-Watch-Party](https://github.com/ritikyadav-io/Yotube-Watch-Party)
+## 🌐 Live Deployments & Repository
+- ⚡ **Render Production Application:** [https://yotube-watch-party.onrender.com/](https://yotube-watch-party.onrender.com/) *(Full Node.js + WebSocket Production Server)*
+- 🌐 **Vercel Production Application:** [https://yotube-watch-party-six.vercel.app/](https://yotube-watch-party-six.vercel.app/) *(Global CDN Frontend)*
+- 📦 **GitHub Repository:** [https://github.com/ritikyadav-io/Yotube-Watch-Party](https://github.com/ritikyadav-io/Yotube-Watch-Party)
 
 ---
 
