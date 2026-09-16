@@ -144,6 +144,33 @@
 
     </section>
 
+    <!-- Trending & Popular Songs Discovery Grid -->
+    <section class="glass-panel p-3 p-md-4 my-4">
+      <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+        <h2 class="h5 text-white fw-bold mb-0">
+          <i class="fa-solid fa-fire text-danger me-2"></i> Watch More Songs
+        </h2>
+        <div class="category-pills" id="landing-category-pills">
+          <button class="cat-pill active" data-query="famous_english">🎵 English Hits</button>
+          <button class="cat-pill" data-query="kk_songs">🎤 KK Songs</button>
+          <button class="cat-pill" data-query="hindi_hits">🇮🇳 Hindi Hits</button>
+          <button class="cat-pill" data-query="seedhe_maut">🎧 Seedhe Maut</button>
+          <button class="cat-pill" data-query="punjabi">🎶 Punjabi Hits</button>
+          <button class="cat-pill" data-query="gaming">🎮 Gaming</button>
+        </div>
+      </div>
+
+      <div class="video-grid" id="landing-video-grid">
+        <!-- Dynamically populated by index.js -->
+      </div>
+
+      <div class="text-center mt-4 pt-2 border-top border-secondary border-opacity-10">
+        <button class="btn-secondary-custom py-2 px-4 rounded-pill fw-bold" id="btn-landing-watch-more">
+          <i class="fa-solid fa-arrows-rotate text-danger me-2"></i> Watch More Songs
+        </button>
+      </div>
+    </section>
+
   </main>
 
   <!-- Toast Notification Container -->

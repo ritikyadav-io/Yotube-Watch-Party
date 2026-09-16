@@ -109,8 +109,122 @@ function initApiKeyManager() {
   if (savedKey && inputKey) inputKey.value = savedKey;
 }
 
+var currentLandingCategory = 'famous_english';
+
 function initVideoFeed() {
-  fetchYouTubeVideos('famous_english');
+  fetchYouTubeVideos(currentLandingCategory);
+
+  // Category pill click handlers
+  document.querySelectorAll('#landing-category-pills .cat-pill').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      document.querySelectorAll('#landing-category-pills .cat-pill').forEach(b => b.classList.remove('active'));
+      e.currentTarget.classList.add('active');
+      const query = e.currentTarget.dataset.query;
+      currentLandingCategory = query;
+      fetchYouTubeVideos(query);
+    });
+  });
+
+  // Watch More Songs button handler
+  const btnWatchMore = document.getElementById('btn-landing-watch-more');
+  if (btnWatchMore) {
+    btnWatchMore.addEventListener('click', () => {
+      fetchMoreLandingVideos(currentLandingCategory);
+    });
+  }
+}
+
+async function fetchMoreLandingVideos(query) {
+  const apiKey = localStorage.getItem('YOUTUBE_API_KEY') || window.ENV_YOUTUBE_API_KEY || '';
+  const searchTerms = [
+    'Arijit Singh Kesariya Tum Hi Ho',
+    'KK best romantic songs Tadap Tadap',
+    'Seedhe Maut KRSNA DHH hip hop',
+    'Ed Sheeran Shape of You Taylor Swift',
+    'AP Dhillon Sidhu Moose Wala Punjabi hits',
+    'Coke Studio pasoori husn'
+  ];
+  const randomTerm = searchTerms[Math.floor(Math.random() * searchTerms.length)];
+  const actualQuery = categoryQueryMap[query] || randomTerm;
+
+  if (apiKey) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+      const apiUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=15&q=${encodeURIComponent(actualQuery)}&type=video&videoEmbeddable=true&key=${apiKey}`;
+      const res = await fetch(apiUrl, { signal: controller.signal });
+      clearTimeout(timeoutId);
+      const data = await res.json();
+      if (data.items && data.items.length > 0) {
+        const formatted = data.items
+          .filter(item => item.id && item.id.videoId)
+          .map(item => ({
+            id: item.id.videoId,
+            title: item.snippet.title,
+            channel: item.snippet.channelTitle,
+            thumbnail: item.snippet.thumbnails.high ? item.snippet.thumbnails.high.url : (item.snippet.thumbnails.medium ? item.snippet.thumbnails.medium.url : item.snippet.thumbnails.default.url)
+          }));
+        if (formatted.length > 0) {
+          appendLandingVideoGrid(formatted);
+          return;
+        }
+      }
+    } catch (err) {}
+  }
+
+  const shuffled = [...CURATED_VIDEOS].sort(() => Math.random() - 0.5);
+  appendLandingVideoGrid(shuffled.slice(0, 12));
+}
+
+function appendLandingVideoGrid(videos) {
+  const grid = document.getElementById('landing-video-grid');
+  if (!grid) return;
+
+  const existingIds = new Set();
+  grid.querySelectorAll('.video-card').forEach(card => {
+    if (card.dataset.videoId) existingIds.add(card.dataset.videoId);
+  });
+
+  const unique = videos.filter(v => v && v.id && !existingIds.has(v.id));
+  const listToRender = unique.length > 0 ? unique : videos.slice(0, 8);
+
+  listToRender.forEach(video => {
+    const card = document.createElement('div');
+    card.className = 'video-card';
+    card.dataset.videoId = video.id;
+    card.innerHTML = `
+      <div class="video-thumb-wrapper">
+        <img class="video-thumb-img" src="${video.thumbnail}" alt="${escapeHtml(video.title)}">
+        <div class="video-play-overlay">
+          <div class="play-btn-circle"><i class="fa-solid fa-play ms-1"></i></div>
+        </div>
+      </div>
+      <div class="video-info-body">
+        <h3 class="video-title-text">${escapeHtml(video.title)}</h3>
+        <div class="video-channel-text">
+          <i class="fa-solid fa-circle-check text-primary"></i> ${escapeHtml(video.channel)}
+        </div>
+        <div class="video-card-actions">
+          <button class="btn-card-action btn-start-party" data-video-id="${video.id}">
+            <i class="fa-solid fa-sparkles text-warning"></i> Start Watch Party
+          </button>
+        </div>
+      </div>
+    `;
+
+    card.querySelector('.btn-start-party').addEventListener('click', (e) => {
+      e.stopPropagation();
+      startPartyWithVideo(video.id);
+    });
+
+    card.addEventListener('click', () => {
+      startPartyWithVideo(video.id);
+    });
+
+    grid.appendChild(card);
+  });
+
+  grid.lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'end' });
 }
 
 function initRoomForms() {

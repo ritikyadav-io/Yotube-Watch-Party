@@ -898,12 +898,34 @@ const roomCategoryFilterMap = {
   'gaming': (v) => v.category === 'gaming' || ['gta', 'minecraft', 'coding', 'freecodecamp', 'rockstar', 'tech'].some(k => v.title.toLowerCase().includes(k))
 };
 
+var currentRoomCategoryQuery = 'hindi_hits';
+
 function initRoomVideoFeed() {
-  fetchRoomYouTubeVideos();
+  fetchRoomYouTubeVideos(currentRoomCategoryQuery);
+
+  // Category pill handlers
+  document.querySelectorAll('#room-category-pills .cat-pill').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      document.querySelectorAll('#room-category-pills .cat-pill').forEach(b => b.classList.remove('active'));
+      e.currentTarget.classList.add('active');
+      const query = e.currentTarget.dataset.query;
+      currentRoomCategoryQuery = query;
+      fetchRoomYouTubeVideos(query, true);
+    });
+  });
+
+  // Watch More Songs button handler
+  const btnWatchMore = document.getElementById('btn-watch-more-songs');
+  if (btnWatchMore) {
+    btnWatchMore.addEventListener('click', () => {
+      fetchMoreRoomYouTubeVideos(currentRoomCategoryQuery);
+    });
+  }
 }
 
 const categoryQueryMap = {
   'hindi_hits': 'trending hindi bollywood songs 2024 Arijit Singh',
+  'kk_songs': 'KK best hit songs Tadap Tadap Zara Sa Pal Yaaron',
   'bollywood': 'top bollywood romantic songs 2024',
   'seedhe_maut': 'Seedhe Maut KRSNA Desi Hip Hop songs',
   'punjabi': 'top punjabi hit songs AP Dhillon Sidhu Moose Wala',
@@ -911,6 +933,141 @@ const categoryQueryMap = {
   'famous_english': 'famous english songs Justin Bieber Taylor Swift Ed Sheeran',
   'gaming': 'GTA VI trailer gaming'
 };
+
+async function fetchMoreRoomYouTubeVideos(query) {
+  showToast("Fetching Watch More Songs...", "fa-arrows-rotate");
+  const apiKey = localStorage.getItem('YOUTUBE_API_KEY') || window.ENV_YOUTUBE_API_KEY || '';
+  
+  const querySearchTerms = [
+    'Arijit Singh top hit songs 2024',
+    'KK best romantic hit songs',
+    'Seedhe Maut KRSNA DHH hip hop',
+    'famous english songs Ed Sheeran Taylor Swift',
+    'top punjabi hit songs AP Dhillon Sidhu Moose Wala',
+    'Coke Studio pasoori husn indie',
+    'trending bollywood songs 2024'
+  ];
+  const randomTerm = querySearchTerms[Math.floor(Math.random() * querySearchTerms.length)];
+  const actualQuery = categoryQueryMap[query] || randomTerm;
+
+  if (apiKey) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+      const apiUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=15&q=${encodeURIComponent(actualQuery)}&type=video&videoEmbeddable=true&key=${apiKey}`;
+      const res = await fetch(apiUrl, { signal: controller.signal });
+      clearTimeout(timeoutId);
+      const data = await res.json();
+      if (data.items && data.items.length > 0) {
+        const formatted = data.items
+          .filter(item => item.id && item.id.videoId)
+          .map(item => ({
+            id: item.id.videoId,
+            title: item.snippet.title,
+            channel: item.snippet.channelTitle,
+            thumbnail: item.snippet.thumbnails.high ? item.snippet.thumbnails.high.url : (item.snippet.thumbnails.medium ? item.snippet.thumbnails.medium.url : item.snippet.thumbnails.default.url)
+          }));
+        if (formatted.length > 0) {
+          appendRoomVideoGrid(formatted);
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn("Watch More YouTube API query failed:", err);
+    }
+  }
+
+  // Fallback: Pick a shuffled selection of curated songs from ROOM_CURATED catalog
+  const shuffled = [...ROOM_CURATED].sort(() => Math.random() - 0.5);
+  appendRoomVideoGrid(shuffled.slice(0, 12));
+}
+
+function appendRoomVideoGrid(videos) {
+  const grid = document.getElementById('room-video-grid');
+  if (!grid) return;
+
+  const existingIds = new Set();
+  grid.querySelectorAll('.video-card').forEach(card => {
+    if (card.dataset.videoId) existingIds.add(card.dataset.videoId);
+  });
+
+  const unique = videos.filter(v => v && v.id && !existingIds.has(v.id));
+  const listToRender = unique.length > 0 ? unique : videos.slice(0, 8);
+
+  listToRender.forEach(video => {
+    const card = document.createElement('div');
+    card.className = 'video-card';
+    card.dataset.videoId = video.id;
+    card.innerHTML = `
+      <div class="video-thumb-wrapper">
+        <img class="video-thumb-img" src="${video.thumbnail}" alt="${escapeHtml(video.title)}">
+        <div class="video-play-overlay">
+          <div class="play-btn-circle"><i class="fa-solid fa-play ms-1"></i></div>
+        </div>
+      </div>
+      <div class="video-info-body">
+        <h3 class="video-title-text">${escapeHtml(video.title)}</h3>
+        <div class="video-channel-text">
+          <i class="fa-solid fa-circle-check text-primary"></i> ${escapeHtml(video.channel)}
+        </div>
+        <div class="video-card-actions">
+          <button class="btn-card-action btn-play-now" title="Play directly in-app">
+            <i class="fa-solid fa-play text-danger"></i> Play Now
+          </button>
+          <button class="btn-card-action btn-add-queue" title="Add to playlist queue">
+            <i class="fa-solid fa-plus text-warning"></i> Queue
+          </button>
+        </div>
+      </div>
+    `;
+
+    const videoObj = {
+      title: video.title,
+      channel: video.channel,
+      thumbnail_url: video.thumbnail,
+      video_url: `https://www.youtube.com/watch?v=${video.id}`,
+      video_id: video.id
+    };
+
+    card.addEventListener('click', () => {
+      if (!canControlPlayback()) {
+        requestPlaybackAction('change_video', videoObj);
+        return;
+      }
+      if (currentVideoObj) historyQueue.push(currentVideoObj);
+      currentVideoObj = videoObj;
+      loadVideoInPlayer(videoObj);
+      socket.emit("playVideoDirectly", videoObj);
+      showToast("Playing Video in App!");
+    });
+
+    card.querySelector('.btn-play-now').addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (!canControlPlayback()) {
+        requestPlaybackAction('change_video', videoObj);
+        return;
+      }
+      if (currentVideoObj) historyQueue.push(currentVideoObj);
+      currentVideoObj = videoObj;
+      loadVideoInPlayer(videoObj);
+      socket.emit("playVideoDirectly", videoObj);
+      showToast("Playing Video in App!");
+    });
+
+    card.querySelector('.btn-add-queue').addEventListener('click', (e) => {
+      e.stopPropagation();
+      playlistQueue.push(videoObj);
+      socket.emit("playlistUpdated", playlistQueue);
+      displayPlaylist();
+      showToast("Added to Playlist Queue!");
+    });
+
+    grid.appendChild(card);
+  });
+
+  showToast(`Loaded ${listToRender.length} More Songs!`, "fa-music");
+  grid.lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+}
 
 async function fetchRoomYouTubeVideos(query = 'hindi_hits', isUserSearch = false) {
   // 1. Immediately render local curated videos with 0ms delay so mobile users never experience blank pages or frozen UI

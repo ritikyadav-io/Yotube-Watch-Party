@@ -136,10 +136,31 @@
 
         <!-- Below-Player YouTube Discovery Feed -->
         <section class="glass-panel p-3 p-md-4 my-2 my-md-3">
+          <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+            <h2 class="h6 text-uppercase text-white fw-bold mb-0" style="letter-spacing: 0.5px;">
+              <i class="fa-solid fa-fire text-danger me-2"></i> Watch More Songs
+            </h2>
+            <div class="category-pills" id="room-category-pills">
+              <button class="cat-pill active" data-query="hindi_hits">🔥 All Hits</button>
+              <button class="cat-pill" data-query="kk_songs">🎤 KK Songs</button>
+              <button class="cat-pill" data-query="famous_english">🎵 English Hits</button>
+              <button class="cat-pill" data-query="bollywood">🇮🇳 Bollywood</button>
+              <button class="cat-pill" data-query="seedhe_maut">🎧 Seedhe Maut</button>
+              <button class="cat-pill" data-query="punjabi">🎶 Punjabi Hits</button>
+              <button class="cat-pill" data-query="gaming">🎮 Gaming & Tech</button>
+            </div>
+          </div>
 
           <!-- Video Grid Below Player -->
           <div class="video-grid" id="room-video-grid">
             <!-- Dynamically populated by room.js -->
+          </div>
+
+          <!-- Watch More Songs Interactive Action -->
+          <div class="text-center mt-4 pt-2 border-top border-secondary border-opacity-10">
+            <button class="btn-secondary-custom py-2 px-4 rounded-pill fw-bold" id="btn-watch-more-songs" title="Fetch more songs using YouTube API">
+              <i class="fa-solid fa-arrows-rotate text-danger me-2"></i> Watch More Songs
+            </button>
           </div>
         </section>
 
