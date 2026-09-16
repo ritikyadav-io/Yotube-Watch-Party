@@ -53,6 +53,7 @@ var pendingSyncState = null;
 var currentVideoObj = null;
 var playlistQueue = [];
 var historyQueue = [];
+var roomMembersList = [];
 
 // Toast notification function
 function showToast(msg, icon = 'fa-circle-check') {
@@ -183,6 +184,14 @@ function switchToTab(targetTab) {
   if (chatTab) chatTab.classList.toggle('d-none', targetTab !== 'chat');
   if (playlistTab) playlistTab.classList.toggle('d-none', targetTab !== 'playlist');
   if (membersTab) membersTab.classList.toggle('d-none', targetTab !== 'members');
+
+  if (targetTab === 'playlist') {
+    displayPlaylist();
+  }
+
+  if (targetTab === 'members') {
+    renderMembersList();
+  }
 
   if (targetTab === 'chat') {
     unreadMessagesCount = 0;
@@ -571,25 +580,35 @@ socket.on('message', (message) => {
 // Participant List & Role Update Listener
 socket.on('roomUsersList', (data) => {
   if (!data || !Array.isArray(data.usersList)) return;
-  const list = data.usersList;
+  roomMembersList = data.usersList;
   hostSocketId = data.hostSocketId;
+  renderMembersList();
+});
 
+function renderMembersList() {
   const usersContainer = document.getElementById('users') || document.querySelector('#users');
-  if (usersContainer) {
-    usersContainer.innerHTML = '';
+  if (!usersContainer) return;
+
+  if (!roomMembersList || roomMembersList.length === 0) {
+    roomMembersList = [{
+      id: socket ? socket.id : 'local-user',
+      username: username || 'You (Host)',
+      role: 'HOST'
+    }];
   }
 
+  usersContainer.innerHTML = '';
   const countEl = document.getElementById('members-count');
-  if (countEl) countEl.textContent = list.length;
+  if (countEl) countEl.textContent = roomMembersList.length;
 
-  // Find my role in the updated list
-  const me = list.find(u => u && u.id === socket.id);
+  // Find my role in the list
+  const me = roomMembersList.find(u => u && u.id === socket.id);
   if (me) {
     currentRole = me.role;
     isHost = (currentRole === 'HOST' || currentRole === 'ADMIN');
   }
 
-  list.forEach(user => {
+  roomMembersList.forEach(user => {
     if (!user) return;
     const isTargetHost = (user.id === hostSocketId || user.role === 'HOST' || user.role === 'ADMIN');
     let roleClass = 'participant';
@@ -606,7 +625,6 @@ socket.on('roomUsersList', (data) => {
       roleIcon = '<i class="fa-solid fa-shield-halved text-info"></i>';
     }
 
-    // Generate Host Control Action Icons if current user is Host and target is not Host
     let hostControls = '';
     if (isHost && user.id !== socket.id) {
       const isMod = user.role === 'MODERATOR';
@@ -657,13 +675,11 @@ socket.on('roomUsersList', (data) => {
       `;
     }
 
-    if (usersContainer) {
-      usersContainer.insertAdjacentHTML('beforeend', html);
-    }
+    usersContainer.insertAdjacentHTML('beforeend', html);
   });
 
   attachHostControlListeners();
-});
+}
 
 function attachHostControlListeners() {
   document.querySelectorAll('.btn-toggle-mod').forEach(btn => {
