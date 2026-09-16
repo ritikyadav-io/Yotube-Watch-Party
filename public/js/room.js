@@ -837,13 +837,25 @@ const ROOM_CURATED = [
   { id: "cqGjhVJWtEg", title: "Spider-Man: Across the Spider-Verse", channel: "Sony Pictures", thumbnail: "https://i.ytimg.com/vi/cqGjhVJWtEg/hqdefault.jpg", category: "entertainment" },
   { id: "EXeTwQWrcwY", title: "The Dark Knight (2008) Official Trailer", channel: "Warner Bros.", thumbnail: "https://i.ytimg.com/vi/EXeTwQWrcwY/hqdefault.jpg", category: "entertainment" },
 
-  // 🇮🇳 Elvish Yadav, CarryMinati, Arijit & Popular Creators
+  // 🇮🇳 Trending Hindi & Bollywood Hit Songs
+  { id: "V7LwfY5U_B8", title: "Arijit Singh - Kesariya (Brahmastra)", channel: "Sony Music India", thumbnail: "https://i.ytimg.com/vi/V7LwfY5U_B8/hqdefault.jpg", category: "hindi_hits" },
+  { id: "vUCMO339vBw", title: "Arijit Singh - Tum Hi Ho (Aashiqui 2)", channel: "T-Series", thumbnail: "https://i.ytimg.com/vi/vUCMO339vBw/hqdefault.jpg", category: "hindi_hits" },
+  { id: "BddP6PYo2gs", title: "Arijit Singh - Channa Mereya (Ae Dil Hai Mushkil)", channel: "Sony Music India", thumbnail: "https://i.ytimg.com/vi/BddP6PYo2gs/hqdefault.jpg", category: "hindi_hits" },
+  { id: "fnT4f8jV_Qk", title: "Jubin Nautiyal - Raataan Lambiyan (Shershaah)", channel: "Sony Music India", thumbnail: "https://i.ytimg.com/vi/fnT4f8jV_Qk/hqdefault.jpg", category: "bollywood" },
+  { id: "ATz8k_K3s38", title: "Vicky Kaushal - Tere Vaaste (Zara Hatke Zara Bachke)", channel: "Saregama Music", thumbnail: "https://i.ytimg.com/vi/ATz8k_K3s38/hqdefault.jpg", category: "bollywood" },
+
+  // 🎤 Desi Hip Hop & Coke Studio Indie
+  { id: "9WbCfHutDSE", title: "Seedhe Maut - Maina (Official Video)", channel: "Seedhe Maut", thumbnail: "https://i.ytimg.com/vi/9WbCfHutDSE/hqdefault.jpg", category: "seedhe_maut" },
+  { id: "D9G1VOjN_84", title: "KR$NA - Vyanjan (Official Track)", channel: "KR$NA", thumbnail: "https://i.ytimg.com/vi/D9G1VOjN_84/hqdefault.jpg", category: "seedhe_maut" },
+  { id: "5Eqb_-j3FDA", title: "Coke Studio Pakistan - Pasoori", channel: "Coke Studio", thumbnail: "https://i.ytimg.com/vi/5Eqb_-j3FDA/hqdefault.jpg", category: "indie_coke" },
+  { id: "AnN79YJ6KFE", title: "Anuv Jain - Husn (Official Video)", channel: "Anuv Jain", thumbnail: "https://i.ytimg.com/vi/AnN79YJ6KFE/hqdefault.jpg", category: "indie_coke" },
+
+  // 🇮🇳 Elvish Yadav, CarryMinati, Punjabi Hits & Popular Creators
   { id: "1g4373w9n9E", title: "Elvish Yadav - SYSTUMM (Official Music Video)", channel: "Elvish Yadav", thumbnail: "https://i.ytimg.com/vi/1g4373w9n9E/hqdefault.jpg", category: "elvish" },
   { id: "6cZ2C2b20-o", title: "Elvish Yadav Vlogs - Meeting Bigg Boss Fans", channel: "Elvish Yadav Vlogs", thumbnail: "https://i.ytimg.com/vi/6cZ2C2b20-o/hqdefault.jpg", category: "elvish" },
   { id: "zzwRbKI2js4", title: "CarryMinati - YALGAAR (Official Music Video)", channel: "CarryMinati", thumbnail: "https://i.ytimg.com/vi/zzwRbKI2js4/hqdefault.jpg", category: "carryminati" },
-  { id: "V7LwfY5U_B8", title: "Arijit Singh - Kesariya (Brahmastra)", channel: "Sony Music India", thumbnail: "https://i.ytimg.com/vi/V7LwfY5U_B8/hqdefault.jpg", category: "arijit" },
-  { id: "vUCMO339vBw", title: "Arijit Singh - Tum Hi Ho (Aashiqui 2)", channel: "T-Series", thumbnail: "https://i.ytimg.com/vi/vUCMO339vBw/hqdefault.jpg", category: "arijit" },
   { id: "hXh35C26570", title: "Sidhu Moose Wala - 295 (Official Audio)", channel: "Sidhu Moose Wala", thumbnail: "https://i.ytimg.com/vi/hXh35C26570/hqdefault.jpg", category: "punjabi" },
+  { id: "cl0a3iY71ao", title: "AP Dhillon - With You (Official Video)", channel: "AP Dhillon", thumbnail: "https://i.ytimg.com/vi/cl0a3iY71ao/hqdefault.jpg", category: "punjabi" },
 
   // 🔥 Trending
   { id: "dQw4w9WgXcQ", title: "Rick Astley - Never Gonna Give You Up", channel: "Rick Astley", thumbnail: "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg", category: "trending" },
@@ -851,13 +863,13 @@ const ROOM_CURATED = [
 ];
 
 const roomCategoryFilterMap = {
-  'famous_english': (v) => v.category === 'english_hits' || ['ed sheeran', 'justin bieber', 'shawn mendes', 'taylor swift', 'passenger', 'the weeknd', 'coldplay', 'dua lipa', 'harry styles', 'trevor daniel', 'duncan laurence', 'ckay', 'mark ronson', 'onerepublic', 'post malone', 'alan walker', 'maroon 5'].some(k => v.title.toLowerCase().includes(k) || v.channel.toLowerCase().includes(k)),
-  'kk_songs': (v) => v.category === 'kk_songs' || ['kk', 'tadap', 'zara sa', 'pal', 'yaaron', 'labon ko', 'alvida', 'tu hi meri shab'].some(k => v.title.toLowerCase().includes(k) || v.channel.toLowerCase().includes(k)),
-  'bieber_shawn': (v) => ['bieber', 'shawn mendes', 'mendes'].some(k => v.title.toLowerCase().includes(k) || v.channel.toLowerCase().includes(k)),
-  'pop_hits': (v) => v.category === 'english_hits' || ['dua lipa', 'harry styles', 'post malone', 'alan walker', 'maroon 5', 'taylor swift', 'justin bieber', 'the weeknd'].some(k => v.title.toLowerCase().includes(k) || v.channel.toLowerCase().includes(k)),
-  'seedhe_maut': (v) => v.category === 'seedhe_maut' || ['seedhe maut', 'kr$na', 'jasleen', 'dhh', 'hip hop'].some(k => v.title.toLowerCase().includes(k) || v.channel.toLowerCase().includes(k)),
-  'learning': (v) => v.category === 'learning' || ['c ', 'c++', 'coding', 'programming', 'pointers', 'data structures', 'steve jobs', 'llama', 'karpathy', 'ai'].some(k => v.title.toLowerCase().includes(k)),
-  'gaming': (v) => v.category === 'gaming' || v.category === 'entertainment' || ['gta', 'minecraft', 'elden ring', 'avatar', 'oppenheimer', 'spider-man', 'dark knight'].some(k => v.title.toLowerCase().includes(k))
+  'hindi_hits': (v) => v.category === 'hindi_hits' || ['arijit', 'kesariya', 'tum hi ho', 'channa mereya', 'badshah', 'jubin', 'neha kakkar'].some(k => v.title.toLowerCase().includes(k) || v.channel.toLowerCase().includes(k)),
+  'bollywood': (v) => v.category === 'bollywood' || ['raataan lambiyan', 'tere vaaste', 'shershaah', 'bollywood', 'aashiqui'].some(k => v.title.toLowerCase().includes(k) || v.channel.toLowerCase().includes(k)),
+  'seedhe_maut': (v) => v.category === 'seedhe_maut' || ['seedhe maut', 'kr$na', 'dhh', 'hip hop', 'divine', 'mc stan'].some(k => v.title.toLowerCase().includes(k) || v.channel.toLowerCase().includes(k)),
+  'punjabi': (v) => v.category === 'punjabi' || ['sidhu moose wala', '295', 'ap dhillon', 'jass manak', 'punjabi', 'karan aujla'].some(k => v.title.toLowerCase().includes(k) || v.channel.toLowerCase().includes(k)),
+  'indie_coke': (v) => v.category === 'indie_coke' || ['pasoori', 'husn', 'anuv jain', 'coke studio', 'jasleen royal', 'indie'].some(k => v.title.toLowerCase().includes(k) || v.channel.toLowerCase().includes(k)),
+  'famous_english': (v) => v.category === 'english_hits' || ['ed sheeran', 'justin bieber', 'shawn mendes', 'taylor swift', 'the weeknd', 'dua lipa'].some(k => v.title.toLowerCase().includes(k) || v.channel.toLowerCase().includes(k)),
+  'gaming': (v) => v.category === 'gaming' || ['gta', 'minecraft', 'coding', 'freecodecamp', 'rockstar', 'tech'].some(k => v.title.toLowerCase().includes(k))
 };
 
 function initRoomVideoFeed() {
@@ -878,16 +890,16 @@ function initRoomVideoFeed() {
 }
 
 const categoryQueryMap = {
-  'famous_english': 'famous english songs Justin Bieber Shawn Mendes Taylor Swift',
-  'kk_songs': 'KK best hit songs bollywood Tadap Tadap Zara Sa Pal',
-  'bieber_shawn': 'Justin Bieber Shawn Mendes official music videos',
-  'pop_hits': 'viral pop english songs 2024',
-  'seedhe_maut': 'Seedhe Maut hip hop songs',
-  'learning': 'C programming full course freeCodeCamp',
+  'hindi_hits': 'trending hindi bollywood songs 2024 Arijit Singh',
+  'bollywood': 'top bollywood romantic songs 2024',
+  'seedhe_maut': 'Seedhe Maut KRSNA Desi Hip Hop songs',
+  'punjabi': 'top punjabi hit songs AP Dhillon Sidhu Moose Wala',
+  'indie_coke': 'Coke Studio trending indie hindi songs Pasoori Husn',
+  'famous_english': 'famous english songs Justin Bieber Taylor Swift Ed Sheeran',
   'gaming': 'GTA VI trailer gaming'
 };
 
-async function fetchRoomYouTubeVideos(query = 'famous_english') {
+async function fetchRoomYouTubeVideos(query = 'hindi_hits') {
   const apiKey = localStorage.getItem('YOUTUBE_API_KEY') || window.ENV_YOUTUBE_API_KEY || '';
   const actualQuery = categoryQueryMap[query] || query;
   
