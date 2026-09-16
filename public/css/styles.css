@@ -955,6 +955,22 @@ a:hover {
 }
 
 /* Responsive adjustments & Mobile Optimization */
+@media (min-width: 992px) {
+  .navbar-custom {
+    padding: 0.85rem 2rem !important;
+    margin-bottom: 2.5rem !important;
+  }
+  .hero-title {
+    font-size: 3rem !important;
+    line-height: 1.2 !important;
+    margin-bottom: 1.25rem !important;
+  }
+  .hero-subtitle {
+    font-size: 1.15rem !important;
+    margin-bottom: 2.25rem !important;
+  }
+}
+
 @media (max-width: 991px) {
   body {
     padding-top: 0 !important;
