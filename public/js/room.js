@@ -597,7 +597,12 @@ socket.on('message', (message) => {
     msgBox.scrollTop = msgBox.scrollHeight;
   }
 
-  // Unread message counter badge
+  // System message toasts & unread message counter badge
+  if (isSystem && message.text) {
+    const isLeave = message.text.toLowerCase().includes('left');
+    showToast(message.text, isLeave ? "fa-user-minus" : "fa-user-plus");
+  }
+
   const chatTabContent = document.getElementById('tab-content-chat');
   const isChatVisible = chatTabContent && !chatTabContent.classList.contains('d-none');
 
@@ -1247,11 +1252,14 @@ function applyPendingSync() {
   pendingSyncState = null;
 
   try {
-    const startTime = sync.currentTime || 0;
+    const startTime = Math.max(0, Math.floor(sync.currentTime || 0));
+    const currentLoadedId = (typeof player.getVideoData === 'function' && player.getVideoData())
+      ? player.getVideoData().video_id
+      : null;
+
     if (typeof player.loadVideoById === 'function') {
-      const currentLoadedId = (typeof player.getVideoData === 'function') ? player.getVideoData().video_id : null;
       if (!currentLoadedId || currentLoadedId !== sync.videoId) {
-        player.loadVideoById(sync.videoId, startTime);
+        player.loadVideoById({ videoId: sync.videoId, startSeconds: startTime });
       } else {
         if (typeof player.seekTo === 'function') {
           player.seekTo(startTime, true);
@@ -1260,6 +1268,8 @@ function applyPendingSync() {
     }
     if (sync.isPlaying && typeof player.playVideo === 'function') {
       player.playVideo();
+    } else if (!sync.isPlaying && typeof player.pauseVideo === 'function') {
+      player.pauseVideo();
     }
   } catch (err) {
     console.warn("applyPendingSync warning:", err);
@@ -1269,17 +1279,27 @@ function applyPendingSync() {
 function ensureYouTubePlayerLoaded(videoId) {
   const vidToPlay = videoId || (currentVideoObj ? currentVideoObj.video_id : 'L7mfjvdnPno');
 
-  // 1. If YT.Player instance is initialized and ready, use loadVideoById (with object parameter fallback)
-  if (player && isPlayerReady && typeof player.loadVideoById === 'function') {
-    try {
-      player.loadVideoById({ videoId: vidToPlay, startSeconds: 0 });
-      if (typeof player.playVideo === 'function') player.playVideo();
-    } catch (e1) {
-      try {
-        player.loadVideoById(vidToPlay, 0);
-        if (typeof player.playVideo === 'function') player.playVideo();
-      } catch (e2) {}
+  // 1. If YT.Player instance is initialized and ready, apply pending sync or load video
+  if (player && isPlayerReady) {
+    if (pendingSyncState) {
+      applyPendingSync();
+      return;
     }
+    if (typeof player.loadVideoById === 'function') {
+      try {
+        const currentLoadedId = (typeof player.getVideoData === 'function' && player.getVideoData()) ? player.getVideoData().video_id : null;
+        if (currentLoadedId !== vidToPlay) {
+          player.loadVideoById({ videoId: vidToPlay, startSeconds: 0 });
+          if (typeof player.playVideo === 'function') player.playVideo();
+        }
+      } catch (e1) {
+        try {
+          player.loadVideoById(vidToPlay, 0);
+          if (typeof player.playVideo === 'function') player.playVideo();
+        } catch (e2) {}
+      }
+    }
+    return;
   }
 
   // 2. If YT API constructor is available and no player instance exists, create API player
@@ -1458,6 +1478,9 @@ socket.on("sync_state", (state) => {
   };
 
   ensureYouTubePlayerLoaded(videoObj.video_id);
+  if (isPlayerReady && player) {
+    applyPendingSync();
+  }
 });
 
 socket.on("playVideoDirectly", (videoObj) => {
