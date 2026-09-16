@@ -40,15 +40,15 @@
         <span>YouTube <span class="text-gradient">Party</span></span>
       </a>
 
-      <!-- Add Video URL Form in Nav -->
+      <!-- Search & Video URL Input Form in Nav -->
       <form class="header-url-form my-0" id="url-form">
         <div class="header-url-input-group">
           <span class="input-group-text border-end-0">
-            <i class="fa-brands fa-youtube text-danger"></i>
+            <i class="fa-solid fa-magnifying-glass text-danger"></i>
           </span>
-          <input class="form-control-custom border-start-0 ps-0" id="url" type="search" placeholder="Paste YouTube Video URL..." aria-label="YouTube URL">
+          <input class="form-control-custom border-start-0 ps-0" id="url" type="search" placeholder="Search YouTube or paste URL..." aria-label="Search YouTube or Paste URL">
           <button class="btn-primary-custom" type="submit" id="btn-add-url">
-            <i class="fa-solid fa-plus me-1"></i> Add
+            <i class="fa-solid fa-play me-1"></i> Play
           </button>
         </div>
       </form>
@@ -116,23 +116,11 @@
           </div>
         </div>
 
-        <!-- Below-Player YouTube Discovery & Search Feed -->
-        <section class="glass-panel p-3 p-md-4 my-3 my-md-4">
-          <div class="section-header">
-            <div>
-              <h2 class="h5 mb-1"><i class="fa-brands fa-youtube text-danger me-2"></i>More Videos to Watch</h2>
-              <p class="text-muted mb-0 fs-7">Search or click any video below to watch inside the party without leaving!</p>
-            </div>
-
-            <!-- In-Room YouTube Search Input -->
-            <div class="search-box-container">
-              <i class="fa-solid fa-magnifying-glass search-icon-inside"></i>
-              <input type="text" id="room-search-input" class="search-input" placeholder="Search YouTube to play or queue...">
-            </div>
-          </div>
+        <!-- Below-Player YouTube Discovery Feed -->
+        <section class="glass-panel p-3 p-md-4 my-2 my-md-3">
 
           <!-- Category Filter Pills -->
-          <div class="category-pills mb-3 mb-md-4" id="room-category-pills">
+          <div class="category-pills mb-3" id="room-category-pills">
             <button class="cat-pill active" data-category="famous_english"><i class="fa-solid fa-fire me-1"></i> Famous English Songs</button>
             <button class="cat-pill" data-category="kk_songs"><i class="fa-solid fa-microphone-lines me-1"></i> KK Best Songs</button>
             <button class="cat-pill" data-category="bieber_shawn"><i class="fa-solid fa-star me-1"></i> Justin Bieber & Shawn Mendes</button>

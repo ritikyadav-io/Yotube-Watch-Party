@@ -469,14 +469,36 @@ function addVideoFromUrl(url, autoPlayIfFirst = false) {
 }
 
 if ($urlForm) {
+  const urlInput = document.getElementById('url');
+
   $urlForm.addEventListener('submit', (e) => {
     e.preventDefault();
-    const url = $urlForm.elements['url'].value.trim();
-    if (url) {
-      addVideoFromUrl(url);
-      $urlForm.elements['url'].value = '';
+    const query = urlInput ? urlInput.value.trim() : '';
+    if (query) {
+      if (youtube_parser(query)) {
+        addVideoFromUrl(query);
+        if (urlInput) urlInput.value = '';
+      } else {
+        fetchRoomYouTubeVideos(query);
+        showToast(`Searching for "${query}"...`, "fa-magnifying-glass");
+      }
     }
   });
+
+  if (urlInput) {
+    let navSearchTimer;
+    urlInput.addEventListener('input', (e) => {
+      const val = e.target.value.trim();
+      if (val && !youtube_parser(val)) {
+        clearTimeout(navSearchTimer);
+        navSearchTimer = setTimeout(() => {
+          fetchRoomYouTubeVideos(val);
+        }, 400);
+      } else if (!val) {
+        renderRoomVideoGrid(ROOM_CURATED);
+      }
+    });
+  }
 }
 
 // --------------------------------------------------------------------------
