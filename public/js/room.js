@@ -1058,28 +1058,20 @@ function appendRoomVideoGrid(videos) {
     };
 
     card.addEventListener('click', () => {
-      if (!canControlPlayback()) {
-        requestPlaybackAction('change_video', videoObj);
-        return;
-      }
       if (currentVideoObj) historyQueue.push(currentVideoObj);
       currentVideoObj = videoObj;
       loadVideoInPlayer(videoObj);
       socket.emit("playVideoDirectly", videoObj);
-      showToast("Playing Video in App!");
+      showToast(`Playing: ${video.title}`, "fa-play");
     });
 
     card.querySelector('.btn-play-now').addEventListener('click', (e) => {
       e.stopPropagation();
-      if (!canControlPlayback()) {
-        requestPlaybackAction('change_video', videoObj);
-        return;
-      }
       if (currentVideoObj) historyQueue.push(currentVideoObj);
       currentVideoObj = videoObj;
       loadVideoInPlayer(videoObj);
       socket.emit("playVideoDirectly", videoObj);
-      showToast("Playing Video in App!");
+      showToast(`Playing: ${video.title}`, "fa-play");
     });
 
     card.querySelector('.btn-add-queue').addEventListener('click', (e) => {
@@ -1184,47 +1176,29 @@ function renderRoomVideoGrid(videos, isUserSearch = false) {
       </div>
     `;
 
+    const videoObj = {
+      title: video.title,
+      channel: video.channel,
+      thumbnail_url: video.thumbnail,
+      video_url: `https://www.youtube.com/watch?v=${video.id}`,
+      video_id: video.id
+    };
+
     card.addEventListener('click', () => {
-      const videoObj = {
-        title: video.title,
-        channel: video.channel,
-        thumbnail_url: video.thumbnail,
-        video_url: `https://www.youtube.com/watch?v=${video.id}`,
-        video_id: video.id
-      };
-
-      if (!canControlPlayback()) {
-        requestPlaybackAction('change_video', videoObj);
-        return;
-      }
-
       if (currentVideoObj) historyQueue.push(currentVideoObj);
       currentVideoObj = videoObj;
       loadVideoInPlayer(videoObj);
       socket.emit("playVideoDirectly", videoObj);
-      showToast("Playing Video in App!");
+      showToast(`Playing: ${video.title}`, "fa-play");
     });
 
     card.querySelector('.btn-play-now').addEventListener('click', (e) => {
       e.stopPropagation();
-      const videoObj = {
-        title: video.title,
-        channel: video.channel,
-        thumbnail_url: video.thumbnail,
-        video_url: `https://www.youtube.com/watch?v=${video.id}`,
-        video_id: video.id
-      };
-
-      if (!canControlPlayback()) {
-        requestPlaybackAction('change_video', videoObj);
-        return;
-      }
-
       if (currentVideoObj) historyQueue.push(currentVideoObj);
       currentVideoObj = videoObj;
       loadVideoInPlayer(videoObj);
       socket.emit("playVideoDirectly", videoObj);
-      showToast("Playing Video in App!");
+      showToast(`Playing: ${video.title}`, "fa-play");
     });
 
     card.querySelector('.btn-add-queue').addEventListener('click', (e) => {

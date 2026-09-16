@@ -112,18 +112,14 @@ class MessageHandler {
             });
             socket.on("playVideoDirectly", (videoObj) => {
                 const room = this.roomManager.getRoomBySocketId(socket.id);
-                if (!room)
+                if (!room || !videoObj || !videoObj.video_id)
                     return;
-                const perm = room.validatePermission(socket.id, "change_video");
-                if (!perm.allowed) {
-                    socket.emit("permission_error", { message: perm.reason });
-                    return;
-                }
                 room.playbackState.videoId = videoObj.video_id;
                 room.playbackState.videoObj = videoObj;
                 room.playbackState.currentTime = 0;
                 room.playbackState.isPlaying = true;
                 room.playbackState.updatedAt = Date.now();
+                // Broadcast new video and live sync state to all room members
                 this.io.to(room.id).emit("playVideoDirectly", videoObj);
                 this.io.to(room.id).emit("sync_state", room.playbackState);
             });
