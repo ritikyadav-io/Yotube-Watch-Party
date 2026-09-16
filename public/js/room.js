@@ -763,6 +763,14 @@ socket.on("playVideoDirectly", (videoObj) => {
 // 5. In-Room YouTube Discovery Feed (100% Verified Valid YouTube IDs)
 // --------------------------------------------------------------------------
 const ROOM_CURATED = [
+  // 🎤 KK Best Hit Songs
+  { id: "yW3wN-r0X6g", title: "KK - Tadap Tadap Ke Is Dil (Official Video)", channel: "KK", thumbnail: "https://i.ytimg.com/vi/yW3wN-r0X6g/hqdefault.jpg", category: "kk_songs" },
+  { id: "5oExb-pbo3s", title: "KK - Zara Sa (Jannat) | Emraan Hashmi", channel: "SonyMusicIndiaVEVO", thumbnail: "https://i.ytimg.com/vi/5oExb-pbo3s/hqdefault.jpg", category: "kk_songs" },
+  { id: "o2t_82s0DQA", title: "KK - Yaaron Dosti Badi Hi Haseen Hai", channel: "SonyMusicIndiaVEVO", thumbnail: "https://i.ytimg.com/vi/o2t_82s0DQA/hqdefault.jpg", category: "kk_songs" },
+  { id: "T9n_Q1n3_34", title: "KK - Pal (Official Video)", channel: "SonyMusicIndiaVEVO", thumbnail: "https://i.ytimg.com/vi/T9n_Q1n3_34/hqdefault.jpg", category: "kk_songs" },
+  { id: "v_7vW3XW28w", title: "KK - Labon Ko (Bhool Bhulaiyaa)", channel: "T-Series", thumbnail: "https://i.ytimg.com/vi/v_7vW3XW28w/hqdefault.jpg", category: "kk_songs" },
+  { id: "Qz-c8fW5F68", title: "KK - Tu Hi Meri Shab Hai (Gangster)", channel: "T-Series", thumbnail: "https://i.ytimg.com/vi/Qz-c8fW5F68/hqdefault.jpg", category: "kk_songs" },
+
   // 🎵 Viral English Hits
   { id: "L7mfjvdnPno", title: "Trevor Daniel - Falling", channel: "Trevor Daniel", thumbnail: "https://i.ytimg.com/vi/L7mfjvdnPno/hqdefault.jpg", category: "english_hits" },
   { id: "51u5fnyrGj4", title: "Duncan Laurence - Arcade", channel: "Duncan Laurence", thumbnail: "https://i.ytimg.com/vi/51u5fnyrGj4/hqdefault.jpg", category: "english_hits" },
@@ -821,6 +829,16 @@ const ROOM_CURATED = [
   { id: "dQw4w9WgXcQ", title: "Rick Astley - Never Gonna Give You Up", channel: "Rick Astley", thumbnail: "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg", category: "trending" },
   { id: "0e3GPea1Tyg", title: "MrBeast - $1 vs $500,000,000 Plane Ticket!", channel: "MrBeast", thumbnail: "https://i.ytimg.com/vi/0e3GPea1Tyg/hqdefault.jpg", category: "trending" }
 ];
+
+const roomCategoryFilterMap = {
+  'famous_english': (v) => v.category === 'english_hits' || ['ed sheeran', 'justin bieber', 'shawn mendes', 'taylor swift', 'passenger', 'the weeknd', 'coldplay', 'dua lipa', 'harry styles', 'trevor daniel', 'duncan laurence', 'ckay', 'mark ronson', 'onerepublic', 'post malone', 'alan walker', 'maroon 5'].some(k => v.title.toLowerCase().includes(k) || v.channel.toLowerCase().includes(k)),
+  'kk_songs': (v) => v.category === 'kk_songs' || ['kk', 'tadap', 'zara sa', 'pal', 'yaaron', 'labon ko', 'alvida', 'tu hi meri shab'].some(k => v.title.toLowerCase().includes(k) || v.channel.toLowerCase().includes(k)),
+  'bieber_shawn': (v) => ['bieber', 'shawn mendes', 'mendes'].some(k => v.title.toLowerCase().includes(k) || v.channel.toLowerCase().includes(k)),
+  'pop_hits': (v) => v.category === 'english_hits' || ['dua lipa', 'harry styles', 'post malone', 'alan walker', 'maroon 5', 'taylor swift', 'justin bieber', 'the weeknd'].some(k => v.title.toLowerCase().includes(k) || v.channel.toLowerCase().includes(k)),
+  'seedhe_maut': (v) => v.category === 'seedhe_maut' || ['seedhe maut', 'kr$na', 'jasleen', 'dhh', 'hip hop'].some(k => v.title.toLowerCase().includes(k) || v.channel.toLowerCase().includes(k)),
+  'learning': (v) => v.category === 'learning' || ['c ', 'c++', 'coding', 'programming', 'pointers', 'data structures', 'steve jobs', 'llama', 'karpathy', 'ai'].some(k => v.title.toLowerCase().includes(k)),
+  'gaming': (v) => v.category === 'gaming' || v.category === 'entertainment' || ['gta', 'minecraft', 'elden ring', 'avatar', 'oppenheimer', 'spider-man', 'dark knight'].some(k => v.title.toLowerCase().includes(k))
+};
 
 function initRoomVideoFeed() {
   const searchInput = document.getElementById('room-search-input');
@@ -888,39 +906,25 @@ async function fetchRoomYouTubeVideos(query = 'famous_english') {
         }
       }
     } catch (err) {
-      console.warn("API Key query failed, using public search fallback", err);
+      console.warn("API Key query failed:", err);
     }
   }
 
-  // 2. Public Invidious YouTube Search Engine (No Key Required!)
-  try {
-    const invidiousUrl = `https://invidious.nerdvpn.de/api/v1/search?q=${encodeURIComponent(query)}&type=video`;
-    const res = await fetch(invidiousUrl);
-    const data = await res.json();
-    if (Array.isArray(data) && data.length > 0) {
-      const formatted = data
-        .filter(item => item.videoId)
-        .slice(0, 12)
-        .map(item => ({
-          id: item.videoId,
-          title: item.title,
-          channel: item.author,
-          thumbnail: item.videoThumbnails && item.videoThumbnails[0] ? item.videoThumbnails[0].url : `https://img.youtube.com/vi/${item.videoId}/mqdefault.jpg`
-        }));
-      if (formatted.length > 0) {
-        renderRoomVideoGrid(formatted);
-        return;
-      }
+  // 2. Category Filter Lookup
+  const filterFn = roomCategoryFilterMap[query];
+  if (filterFn) {
+    const filtered = ROOM_CURATED.filter(filterFn);
+    if (filtered.length > 0) {
+      renderRoomVideoGrid(filtered);
+      return;
     }
-  } catch (err) {
-    console.warn("Invidious public search offline, filtering ROOM_CURATED list", err);
   }
 
-  // 3. Fallback to local ROOM_CURATED list
+  // 3. Fallback to general search query matching
   const qLower = query.toLowerCase();
   const filtered = ROOM_CURATED.filter(v =>
     v.title.toLowerCase().includes(qLower) ||
-    v.category.toLowerCase().includes(qLower) ||
+    (v.category && v.category.toLowerCase().includes(qLower)) ||
     v.channel.toLowerCase().includes(qLower)
   );
   renderRoomVideoGrid(filtered.length > 0 ? filtered : ROOM_CURATED);

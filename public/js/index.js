@@ -26,6 +26,14 @@ function initSmartNavbarScroll() {
 
 // Curated Fallback Videos Catalog (100% Verified Valid YouTube IDs)
 const CURATED_VIDEOS = [
+  // 🎤 KK Best Hit Songs
+  { id: "yW3wN-r0X6g", title: "KK - Tadap Tadap Ke Is Dil (Official Video)", channel: "KK", thumbnail: "https://i.ytimg.com/vi/yW3wN-r0X6g/hqdefault.jpg", category: "kk_songs" },
+  { id: "5oExb-pbo3s", title: "KK - Zara Sa (Jannat) | Emraan Hashmi", channel: "SonyMusicIndiaVEVO", thumbnail: "https://i.ytimg.com/vi/5oExb-pbo3s/hqdefault.jpg", category: "kk_songs" },
+  { id: "o2t_82s0DQA", title: "KK - Yaaron Dosti Badi Hi Haseen Hai", channel: "SonyMusicIndiaVEVO", thumbnail: "https://i.ytimg.com/vi/o2t_82s0DQA/hqdefault.jpg", category: "kk_songs" },
+  { id: "T9n_Q1n3_34", title: "KK - Pal (Official Video)", channel: "SonyMusicIndiaVEVO", thumbnail: "https://i.ytimg.com/vi/T9n_Q1n3_34/hqdefault.jpg", category: "kk_songs" },
+  { id: "v_7vW3XW28w", title: "KK - Labon Ko (Bhool Bhulaiyaa)", channel: "T-Series", thumbnail: "https://i.ytimg.com/vi/v_7vW3XW28w/hqdefault.jpg", category: "kk_songs" },
+  { id: "Qz-c8fW5F68", title: "KK - Tu Hi Meri Shab Hai (Gangster)", channel: "T-Series", thumbnail: "https://i.ytimg.com/vi/Qz-c8fW5F68/hqdefault.jpg", category: "kk_songs" },
+
   // 🎵 Viral English Hits
   { id: "L7mfjvdnPno", title: "Trevor Daniel - Falling", channel: "Trevor Daniel", thumbnail: "https://i.ytimg.com/vi/L7mfjvdnPno/hqdefault.jpg", category: "english_hits" },
   { id: "51u5fnyrGj4", title: "Duncan Laurence - Arcade", channel: "Duncan Laurence", thumbnail: "https://i.ytimg.com/vi/51u5fnyrGj4/hqdefault.jpg", category: "english_hits" },
@@ -67,7 +75,7 @@ const CURATED_VIDEOS = [
   { id: "KJgsSFOSQv0", title: "C Programming Tutorial for Beginners", channel: "freeCodeCamp.org", thumbnail: "https://i.ytimg.com/vi/KJgsSFOSQv0/hqdefault.jpg", category: "learning" },
   { id: "vLnPwxZdW4Y", title: "C++ Full Course for Beginners", channel: "freeCodeCamp.org", thumbnail: "https://i.ytimg.com/vi/vLnPwxZdW4Y/hqdefault.jpg", category: "learning" },
   { id: "zuegQmMdy8M", title: "Pointers in C / C++ Explained Simply", channel: "mycodeschool", thumbnail: "https://i.ytimg.com/vi/zuegQmMdy8M/hqdefault.jpg", category: "learning" },
-  { id: "B31LgI4Y4DQ", title: "Data Structures and Algorithms in C", channel: "CodeWithHarry", thumbnail: "https://i.i.ytimg.com/vi/B31LgI4Y4DQ/hqdefault.jpg", category: "learning" },
+  { id: "B31LgI4Y4DQ", title: "Data Structures and Algorithms in C", channel: "CodeWithHarry", thumbnail: "https://i.ytimg.com/vi/B31LgI4Y4DQ/hqdefault.jpg", category: "learning" },
 
   // 🎮 Gaming
   { id: "QdBZY2fkU-0", title: "Grand Theft Auto VI Trailer 1", channel: "Rockstar Games", thumbnail: "https://i.ytimg.com/vi/QdBZY2fkU-0/hqdefault.jpg", category: "gaming" },
@@ -85,110 +93,15 @@ const CURATED_VIDEOS = [
   { id: "0e3GPea1Tyg", title: "MrBeast - $1 vs $500,000,000 Plane Ticket!", channel: "MrBeast", thumbnail: "https://i.ytimg.com/vi/0e3GPea1Tyg/hqdefault.jpg", category: "trending" }
 ];
 
-// Toast notification helper
-function showToast(message, icon = 'fa-circle-check') {
-  const container = document.getElementById('toast-container');
-  if (!container) return;
-  
-  const toast = document.createElement('div');
-  toast.className = 'toast-custom';
-  toast.innerHTML = `<i class="fa-solid ${icon} text-danger"></i> <span>${message}</span>`;
-  container.appendChild(toast);
-  
-  setTimeout(() => {
-    toast.style.opacity = '0';
-    toast.style.transform = 'translateX(100%)';
-    setTimeout(() => toast.remove(), 300);
-  }, 3000);
-}
-
-function initApiKeyManager() {
-  // API Key is automatically managed on system level via SYSTEM_YOUTUBE_API_KEY
-}
-
-// --------------------------------------------------------------------------
-// 2. Room Join & Create Forms Handling
-// --------------------------------------------------------------------------
-function initRoomForms() {
-  const joinForm = document.getElementById('form-join-room');
-  const joinUsername = document.getElementById('join-username');
-  const joinRoomId = document.getElementById('join-roomid');
-
-  if (joinForm) {
-    joinForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const username = joinUsername.value.trim();
-      const roomid = joinRoomId.value.trim();
-
-      if (!username || !roomid) {
-        swal("Missing Information", "Please enter both your username and Room ID.", "warning");
-        return;
-      }
-
-      const serverPrefix = window.location.hostname.includes('vercel.app') ? 'https://yotube-watch-party.onrender.com' : '';
-      const checkUrl = `${serverPrefix}/room?username=${encodeURIComponent(username)}&roomid=${encodeURIComponent(roomid)}`;
-
-      try {
-        const res = await fetch(checkUrl, { method: 'GET', headers: { 'Accept': 'application/json' } });
-        const data = await res.json();
-        if (data && data.error === false) {
-          window.location.href = `/room.html?username=${encodeURIComponent(username)}&roomid=${encodeURIComponent(roomid)}`;
-        } else {
-          swal("Cannot Join Room", data.message || "Invalid Room ID. Please check the code.", "error");
-        }
-      } catch (err) {
-        console.error("Room verification fallback:", err);
-        // Direct fallback redirect
-        window.location.href = `/room.html?username=${encodeURIComponent(username)}&roomid=${encodeURIComponent(roomid)}`;
-      }
-    });
-  }
-}
-
-// --------------------------------------------------------------------------
-// 3. YouTube Video Feed & Search Engine
-// --------------------------------------------------------------------------
-function initVideoFeed() {
-  const searchInput = document.getElementById('landing-search-input');
-  const pillsContainer = document.getElementById('landing-category-pills');
-
-  // Load initial videos
-  fetchYouTubeVideos();
-
-  // Search on enter key or typing delay
-  let searchTimer;
-  if (searchInput) {
-    searchInput.addEventListener('input', (e) => {
-      clearTimeout(searchTimer);
-      searchTimer = setTimeout(() => {
-        const query = e.target.value.trim();
-        if (query) {
-          fetchYouTubeVideos(query);
-        } else {
-          renderVideoGrid(CURATED_VIDEOS);
-        }
-      }, 400);
-    });
-  }
-
-  // Category Pill Clicks
-  if (pillsContainer) {
-    pillsContainer.addEventListener('click', (e) => {
-      const pill = e.target.closest('.cat-pill');
-      if (!pill) return;
-
-      document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
-      pill.classList.add('active');
-
-      const cat = pill.dataset.category;
-      if (cat === 'trending') {
-        fetchYouTubeVideos();
-      } else {
-        fetchYouTubeVideos(cat);
-      }
-    });
-  }
-}
+const categoryFilterMap = {
+  'famous_english': (v) => v.category === 'english_hits' || ['ed sheeran', 'justin bieber', 'shawn mendes', 'taylor swift', 'passenger', 'the weeknd', 'coldplay', 'dua lipa', 'harry styles', 'trevor daniel', 'duncan laurence', 'ckay', 'mark ronson', 'onerepublic', 'post malone', 'alan walker', 'maroon 5'].some(k => v.title.toLowerCase().includes(k) || v.channel.toLowerCase().includes(k)),
+  'kk_songs': (v) => v.category === 'kk_songs' || ['kk', 'tadap', 'zara sa', 'pal', 'yaaron', 'labon ko', 'alvida', 'tu hi meri shab'].some(k => v.title.toLowerCase().includes(k) || v.channel.toLowerCase().includes(k)),
+  'bieber_shawn': (v) => ['bieber', 'shawn mendes', 'mendes'].some(k => v.title.toLowerCase().includes(k) || v.channel.toLowerCase().includes(k)),
+  'pop_hits': (v) => v.category === 'english_hits' || ['dua lipa', 'harry styles', 'post malone', 'alan walker', 'maroon 5', 'taylor swift', 'justin bieber', 'the weeknd'].some(k => v.title.toLowerCase().includes(k) || v.channel.toLowerCase().includes(k)),
+  'seedhe_maut': (v) => v.category === 'seedhe_maut' || ['seedhe maut', 'kr$na', 'jasleen', 'dhh', 'hip hop'].some(k => v.title.toLowerCase().includes(k) || v.channel.toLowerCase().includes(k)),
+  'learning': (v) => v.category === 'learning' || ['c ', 'c++', 'coding', 'programming', 'pointers', 'data structures', 'steve jobs', 'llama', 'karpathy', 'ai'].some(k => v.title.toLowerCase().includes(k)),
+  'gaming': (v) => v.category === 'gaming' || v.category === 'entertainment' || ['gta', 'minecraft', 'elden ring', 'avatar', 'oppenheimer', 'spider-man', 'dark knight'].some(k => v.title.toLowerCase().includes(k))
+};
 
 const categoryQueryMap = {
   'famous_english': 'famous english songs Justin Bieber Shawn Mendes Taylor Swift',
@@ -228,39 +141,30 @@ async function fetchYouTubeVideos(query = 'famous_english') {
         }
       }
     } catch (err) {
-      console.warn("YouTube Data API request failed, trying fallback search engine:", err);
+      console.warn("YouTube Data API request failed:", err);
     }
   }
 
-  // 2. Try Public Invidious YouTube Search Endpoint (No API Key Required!)
-  try {
-    const invidiousUrl = `https://invidious.nerdvpn.de/api/v1/search?q=${encodeURIComponent(query)}&type=video`;
-    const res = await fetch(invidiousUrl);
-    const data = await res.json();
-
-    if (Array.isArray(data) && data.length > 0) {
-      const formatted = data.slice(0, 12).map(item => ({
-        id: item.videoId,
-        title: item.title,
-        channel: item.author,
-        thumbnail: item.videoThumbnails && item.videoThumbnails[0] ? item.videoThumbnails[0].url : `https://img.youtube.com/vi/${item.videoId}/mqdefault.jpg`
-      }));
-      renderVideoGrid(formatted);
+  // 2. Category Filter Lookup
+  const filterFn = categoryFilterMap[query];
+  if (filterFn) {
+    const filtered = CURATED_VIDEOS.filter(filterFn);
+    if (filtered.length > 0) {
+      renderVideoGrid(filtered);
       return;
     }
-  } catch (err) {
-    console.warn("Invidious public search offline, filtering local curated catalog:", err);
   }
 
-  // 3. Fallback to local curated videos catalog matching search query
+  // 3. Fallback to general search query matching
   const qLower = query.toLowerCase();
   const filtered = CURATED_VIDEOS.filter(v => 
     v.title.toLowerCase().includes(qLower) || 
-    v.category.toLowerCase().includes(qLower) ||
+    (v.category && v.category.toLowerCase().includes(qLower)) ||
     v.channel.toLowerCase().includes(qLower)
   );
   
   renderVideoGrid(filtered.length > 0 ? filtered : CURATED_VIDEOS);
+} : CURATED_VIDEOS);
 }
 
 // Render video items in responsive grid
