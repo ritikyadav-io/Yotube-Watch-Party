@@ -7,7 +7,6 @@ const express_1 = __importDefault(require("express"));
 const http_1 = require("http");
 const socket_io_1 = __importDefault(require("socket.io"));
 const MessageHandler_1 = require("./controllers/MessageHandler");
-const RoomManager_1 = require("./models/RoomManager");
 const app = express_1.default();
 const port = process.env.PORT || 3000;
 const httpServer = http_1.createServer(app);
@@ -52,13 +51,7 @@ app.get("/room", (req, res) => {
     const roomid = req.query.roomid || '';
     if (isJsonRequest) {
         res.setHeader("Content-Type", "application/json");
-        const roomManager = RoomManager_1.RoomManager.getInstance();
-        if (!roomid || !roomManager.checkIfRoomExists(roomid.trim())) {
-            res.status(200).json({ error: true, message: "Room ID does not exist. Please check the code." });
-        }
-        else {
-            res.status(200).json({ error: false });
-        }
+        res.status(200).json({ error: false });
         return;
     }
     // Standard Browser Request: Redirect to /room.html with query parameters preserved

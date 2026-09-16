@@ -30,10 +30,18 @@ export class RoomManager {
     }
 
     public joinRoom(rawRoomId: string, username: string, socketId: string): { success: boolean; room?: Room; participant?: Participant; error?: string } {
-        const roomId = (rawRoomId && typeof rawRoomId === 'string') ? rawRoomId.trim().toUpperCase() : '';
-        const room = this.rooms.get(roomId);
+        const roomId = (rawRoomId && typeof rawRoomId === 'string') ? rawRoomId.trim().toUpperCase() : generateRoomID().trim().toUpperCase();
+        let room = this.rooms.get(roomId);
+
+        // If room does not exist yet, auto-create it with this roomId so users can seamlessly join without "Room does not exist" error
         if (!room) {
-            return { success: false, error: "Room ID does not exist." };
+            const rawName = (username && typeof username === 'string') ? username.trim() : '';
+            const hostName = rawName || `Host-${socketId.substring(0, 4)}`;
+            const host = new Participant(socketId, hostName, roomId, Role.HOST);
+            room = new Room(roomId, host);
+            this.rooms.set(roomId, room);
+            this.socketToRoom.set(socketId, roomId);
+            return { success: true, room, participant: host };
         }
 
         const rawName = (username && typeof username === 'string') ? username.trim() : '';

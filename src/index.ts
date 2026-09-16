@@ -58,13 +58,7 @@ app.get("/room", (req, res) => {
 
     if (isJsonRequest) {
         res.setHeader("Content-Type", "application/json");
-        const roomManager = RoomManager.getInstance();
-
-        if (!roomid || !roomManager.checkIfRoomExists(roomid.trim())) {
-            res.status(200).json({ error: true, message: "Room ID does not exist. Please check the code." });
-        } else {
-            res.status(200).json({ error: false });
-        }
+        res.status(200).json({ error: false });
         return;
     }
 
