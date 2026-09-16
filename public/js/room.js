@@ -2,7 +2,11 @@
 // YouTube Party - Realtime Synchronized Room Controller (RBAC Enabled)
 // ==========================================================================
 
-var socket = io();
+var serverUrl = window.location.hostname.includes('vercel.app')
+  ? 'https://yotube-watch-party.onrender.com'
+  : undefined;
+
+var socket = io(serverUrl);
 
 // UI Element Handles
 const $messageForm = document.querySelector('#message-form');

@@ -123,7 +123,8 @@ function initRoomForms() {
       if (!username || !roomid) return;
 
       const xhr = new XMLHttpRequest();
-      const checkUrl = `/room?username=${encodeURIComponent(username)}&roomid=${encodeURIComponent(roomid)}`;
+      const serverPrefix = window.location.hostname.includes('vercel.app') ? 'https://yotube-watch-party.onrender.com' : '';
+      const checkUrl = `${serverPrefix}/room?username=${encodeURIComponent(username)}&roomid=${encodeURIComponent(roomid)}`;
       
       xhr.open("GET", checkUrl);
       xhr.send();
