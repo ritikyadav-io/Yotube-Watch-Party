@@ -64,13 +64,14 @@ export class Room {
     }
 
     public addParticipant(participant: Participant): void {
-        // If room has no active host, promote first user to Host
-        if (this.participants.size === 0) {
+        const isHostUser = (participant.role === Role.HOST) || 
+                           (this.hostUsername && this.hostUsername.toLowerCase() === participant.username.toLowerCase()) || 
+                           (this.participants.size === 0);
+
+        if (isHostUser) {
             participant.role = Role.HOST;
             this.hostSocketId = participant.id;
             this.hostUsername = participant.username;
-        } else {
-            participant.role = Role.PARTICIPANT;
         }
         this.participants.set(participant.id, participant);
     }

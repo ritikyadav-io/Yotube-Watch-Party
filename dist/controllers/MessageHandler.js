@@ -289,11 +289,20 @@ class MessageHandler {
             socket.on("disconnect", () => {
                 const { room, participant } = this.roomManager.leaveRoom(socket.id);
                 if (room && participant) {
-                    this.io.to(room.id).emit("message", {
-                        username: "System",
-                        text: `${participant.username} left the room.`
-                    });
-                    this.broadcastRoomUsers(room.id);
+                    const leftUsername = participant.username;
+                    const targetRoomId = room.id;
+                    // 1.5s grace period before announcing leave message to avoid false leave notifications on refresh/reconnect
+                    setTimeout(() => {
+                        const targetRoom = this.roomManager.getRoom(targetRoomId);
+                        const isReconnected = targetRoom && targetRoom.getParticipantsList().some(p => p.username.toLowerCase() === leftUsername.toLowerCase());
+                        if (!isReconnected) {
+                            this.io.to(targetRoomId).emit("message", {
+                                username: "System",
+                                text: `${leftUsername} left the room.`
+                            });
+                        }
+                        this.broadcastRoomUsers(targetRoomId);
+                    }, 1500);
                 }
             });
         });

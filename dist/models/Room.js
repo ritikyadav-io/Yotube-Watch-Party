@@ -32,14 +32,13 @@ class Room {
         };
     }
     addParticipant(participant) {
-        // If room has no active host, promote first user to Host
-        if (this.participants.size === 0) {
+        const isHostUser = (participant.role === Participant_1.Role.HOST) ||
+            (this.hostUsername && this.hostUsername.toLowerCase() === participant.username.toLowerCase()) ||
+            (this.participants.size === 0);
+        if (isHostUser) {
             participant.role = Participant_1.Role.HOST;
             this.hostSocketId = participant.id;
             this.hostUsername = participant.username;
-        }
-        else {
-            participant.role = Participant_1.Role.PARTICIPANT;
         }
         this.participants.set(participant.id, participant);
     }
