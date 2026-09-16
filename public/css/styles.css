@@ -128,6 +128,11 @@ a:hover {
   font-size: 1.15rem;
   font-weight: 800;
   color: #fff !important;
+  white-space: nowrap !important;
+}
+
+.navbar-brand-custom span {
+  white-space: nowrap !important;
 }
 
 .navbar-brand-custom img {
@@ -1128,6 +1133,10 @@ a:hover {
     top: 0;
     z-index: 1000;
     margin-bottom: 0.5rem !important;
+  }
+  .navbar-brand-custom {
+    font-size: 0.95rem !important;
+    gap: 6px !important;
   }
   #room-brand-logo {
     order: 1 !important;
