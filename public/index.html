@@ -56,23 +56,23 @@
   </header>
 
   <!-- Main Content Area -->
-  <main class="container my-5">
+  <main class="container my-2 my-md-3 py-1">
     
     <!-- Hero Header -->
-    <section class="text-center mb-5">
-      <div class="hero-badge">
+    <section class="text-center mb-3 mb-md-4">
+      <div class="hero-badge mb-2">
         <i class="fa-solid fa-bolt"></i> Real-Time Synchronized Watch Parties
       </div>
       <h1 class="hero-title">
         Watch YouTube Videos <br><span class="text-gradient">Together in Perfect Sync</span>
       </h1>
-      <p class="hero-subtitle mx-auto">
+      <p class="hero-subtitle mx-auto mb-2">
         Create virtual watch rooms in seconds. Experience synchronized YouTube playback, live chat, shared playlist queues, and instant video search.
       </p>
     </section>
 
     <!-- Create & Join Party Interactive Cards Section -->
-    <section class="row g-4 mb-5 justify-content-center">
+    <section class="row g-3 g-md-4 mb-4 justify-content-center">
       
       <!-- Join Room Card -->
       <div class="col-lg-5 col-md-6">
@@ -80,21 +80,21 @@
           <div class="card-icon-wrapper">
             <i class="fa-solid fa-right-to-bracket"></i>
           </div>
-          <h2 class="h3 mb-2">Join Watch Party</h2>
-          <p class="text-muted mb-4 fs-6">Enter an existing Room ID and your nickname to join your friends instantly.</p>
+          <h2 class="h4 mb-1">Join Watch Party</h2>
+          <p class="text-muted mb-3 fs-7">Enter an existing Room ID and your nickname to join your friends instantly.</p>
 
           <form action="/room" method="GET" id="form-join-room">
-            <div class="mb-3">
+            <div class="mb-2">
               <label for="join-username" class="form-label-custom">Your Username *</label>
               <input type="text" name="username" id="join-username" required placeholder="e.g. Alex" class="form-control-custom">
             </div>
 
-            <div class="mb-4">
+            <div class="mb-3">
               <label for="join-roomid" class="form-label-custom">Room ID *</label>
               <input type="text" name="roomid" id="join-roomid" required placeholder="e.g. ROOM-8924" class="form-control-custom">
             </div>
 
-            <button type="submit" class="btn-primary-custom w-100" id="btn-submit-join">
+            <button type="submit" class="btn-primary-custom w-100 py-2" id="btn-submit-join">
               <i class="fa-solid fa-play"></i> Join Party
             </button>
           </form>
@@ -107,23 +107,23 @@
           <div class="card-icon-wrapper" style="background: rgba(138, 43, 226, 0.15); color: var(--accent-purple);">
             <i class="fa-solid fa-plus-circle"></i>
           </div>
-          <h2 class="h3 mb-2">Create Watch Party</h2>
-          <p class="text-muted mb-4 fs-6">Start a brand new watch party, pick a video, and invite your friends with a custom link.</p>
+          <h2 class="h4 mb-1">Create Watch Party</h2>
+          <p class="text-muted mb-3 fs-7">Start a brand new watch party, pick a video, and invite your friends with a custom link.</p>
 
           <form action="/room.html" method="GET" id="form-create-room">
-            <div class="mb-4">
+            <div class="mb-3">
               <label for="create-username" class="form-label-custom">Host Nickname *</label>
               <input type="text" name="username" id="create-username" required placeholder="e.g. Sarah (Host)" class="form-control-custom">
             </div>
 
-            <div class="p-3 mb-4 rounded-3" style="background: rgba(255, 255, 255, 0.03); border: 1px dashed var(--border-glass);">
+            <div class="p-2 mb-3 rounded-3" style="background: rgba(255, 255, 255, 0.03); border: 1px dashed var(--border-glass);">
               <div class="d-flex align-items-center gap-2 text-muted fs-7">
                 <i class="fa-solid fa-circle-info text-primary"></i>
                 <span>Automatic unique Room ID will be generated upon creation.</span>
               </div>
             </div>
 
-            <button type="submit" class="btn-primary-custom w-100" style="background: linear-gradient(135deg, #8a2be2 0%, #ff0044 100%);" id="btn-submit-create">
+            <button type="submit" class="btn-primary-custom w-100 py-2" style="background: linear-gradient(135deg, #8a2be2 0%, #ff0044 100%);" id="btn-submit-create">
               <i class="fa-solid fa-plus-circle"></i> Create New Room
             </button>
           </form>

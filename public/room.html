@@ -70,8 +70,8 @@
   </header>
 
   <!-- Main Room Content -->
-  <main class="container-fluid px-4 my-4">
-    <div class="row g-4">
+  <main class="container-fluid px-2 px-md-4 my-2 my-md-3">
+    <div class="row g-3 g-md-4">
       
       <!-- Left Column: Video Player, Controls, Info & Below-Player Search Grid -->
       <div class="col-lg-8">
@@ -107,7 +107,7 @@
         </div>
 
         <!-- Currently Playing Video Meta -->
-        <div class="glass-panel p-3 my-3">
+        <div class="glass-panel p-3 my-2 my-md-3">
           <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
             <div>
               <h1 class="h4 mb-1" id="video-title">YouTube Watch Party Player</h1>
@@ -117,7 +117,7 @@
         </div>
 
         <!-- Below-Player YouTube Discovery & Search Feed -->
-        <section class="glass-panel p-4 my-4">
+        <section class="glass-panel p-3 p-md-4 my-3 my-md-4">
           <div class="section-header">
             <div>
               <h2 class="h5 mb-1"><i class="fa-brands fa-youtube text-danger me-2"></i>More Videos to Watch</h2>
@@ -132,7 +132,7 @@
           </div>
 
           <!-- Category Filter Pills -->
-          <div class="category-pills mb-4" id="room-category-pills">
+          <div class="category-pills mb-3 mb-md-4" id="room-category-pills">
             <button class="cat-pill active" data-category="famous_english"><i class="fa-solid fa-fire me-1"></i> Famous English Songs</button>
             <button class="cat-pill" data-category="kk_songs"><i class="fa-solid fa-microphone-lines me-1"></i> KK Best Songs</button>
             <button class="cat-pill" data-category="bieber_shawn"><i class="fa-solid fa-star me-1"></i> Justin Bieber & Shawn Mendes</button>
@@ -164,10 +164,10 @@
               <i class="fa-solid fa-comments"></i> Chat <span id="chat-unread-badge" class="badge bg-danger rounded-pill ms-1 d-none">0</span>
             </button>
             <button class="tab-btn" id="tab-btn-playlist" data-tab="playlist">
-              <i class="fa-solid fa-list-ul"></i> Playlist (<span id="playlist-count">0</span>)
+              <i class="fa-solid fa-list-ul"></i> Queue (<span id="playlist-count">0</span>)
             </button>
             <button class="tab-btn" id="tab-btn-members" data-tab="members">
-              <i class="fa-solid fa-users"></i> Members (<span id="members-count">1</span>)
+              <i class="fa-solid fa-users"></i> Users (<span id="members-count">1</span>)
             </button>
           </div>
 
@@ -176,14 +176,6 @@
             <div class="chat-container">
               <div id="messages" class="chat-messages-box">
                 <!-- Chat message pills dynamically added -->
-              </div>
-              <div class="d-flex gap-1 py-1" id="quick-emoji-bar">
-                <button class="btn-card-action py-0 px-2 btn-emoji-quick" data-emoji="❤️">❤️</button>
-                <button class="btn-card-action py-0 px-2 btn-emoji-quick" data-emoji="🔥">🔥</button>
-                <button class="btn-card-action py-0 px-2 btn-emoji-quick" data-emoji="🎉">🎉</button>
-                <button class="btn-card-action py-0 px-2 btn-emoji-quick" data-emoji="👍">👍</button>
-                <button class="btn-card-action py-0 px-2 btn-emoji-quick" data-emoji="😂">😂</button>
-                <button class="btn-card-action py-0 px-2 btn-emoji-quick" data-emoji="👏">👏</button>
               </div>
               <form id="message-form" class="chat-input-bar mt-1">
                 <input id="inputMessage" type="text" class="form-control-custom" placeholder="Type a message..." autocomplete="off">
