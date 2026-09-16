@@ -250,6 +250,8 @@ async function initialSetup() {
 
     socket.on("getRoomID", (id) => {
       if (id) {
+        currentRole = 'HOST';
+        isHost = true;
         roomid = id.trim().toUpperCase();
         if (roomInput) roomInput.value = roomid;
         const newUrl = `${window.location.pathname}?username=${encodeURIComponent(username)}&roomid=${encodeURIComponent(roomid)}`;
