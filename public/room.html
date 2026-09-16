@@ -32,38 +32,43 @@
 
   <!-- Top Navigation Bar -->
   <header class="navbar-custom">
-    <div class="container-fluid px-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <div class="container-fluid px-2 px-md-3">
       
-      <!-- Brand & Greeting -->
-      <a class="navbar-brand-custom fs-6" href="/" id="room-brand-logo">
-        <img src="images/logo.png" alt="YouTube Watch Party Logo" width="30" height="22" id="room-logo-img">
-        <span>YouTube Watch <span class="text-gradient">Party</span></span>
-      </a>
+      <!-- Flex Header Wrapper -->
+      <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 w-100">
+        
+        <!-- Brand Logo (Logo Image + Text on Desktop, Logo Image only on Mobile) -->
+        <a class="navbar-brand-custom fs-6 text-decoration-none d-flex align-items-center gap-2 m-0" href="/" id="room-brand-logo">
+          <img src="images/logo.png" alt="YouTube Watch Party Logo" width="32" height="23" id="room-logo-img">
+          <span class="brand-text-full d-none d-md-inline">YouTube Watch <span class="text-gradient">Party</span></span>
+        </a>
 
-      <!-- Search & Video URL Input Form in Nav -->
-      <form class="header-url-form my-0" id="url-form">
-        <div class="header-url-input-group">
-          <span class="input-group-text border-end-0">
-            <i class="fa-solid fa-magnifying-glass text-danger"></i>
-          </span>
-          <input class="form-control-custom border-start-0 ps-0" id="url" type="search" placeholder="Search YouTube or paste URL..." aria-label="Search YouTube or Paste URL">
-          <button class="btn-primary-custom" type="submit" id="btn-add-url">
-            <i class="fa-solid fa-magnifying-glass me-1"></i> Search
-          </button>
-        </div>
-      </form>
+        <!-- Search & Video URL Input Form in Nav -->
+        <form class="header-url-form my-0 flex-grow-1" id="url-form">
+          <div class="header-url-input-group">
+            <span class="input-group-text border-end-0">
+              <i class="fa-solid fa-magnifying-glass text-danger"></i>
+            </span>
+            <input class="form-control-custom border-start-0 ps-0" id="url" type="search" placeholder="Search YouTube or paste URL..." aria-label="Search YouTube or Paste URL">
+            <button class="btn-primary-custom" type="submit" id="btn-add-url">
+              <i class="fa-solid fa-magnifying-glass me-1"></i> <span class="d-none d-sm-inline">Search</span>
+            </button>
+          </div>
+        </form>
 
-      <!-- Right Header Actions: Room ID, Copy, Invite -->
-      <div class="d-flex align-items-center gap-2">
-        <div class="input-group input-group-sm" style="width: auto;">
-          <input type="text" class="form-control-custom py-1 px-2 fs-7 text-center font-monospace" id="roomid" readonly style="max-width: 110px;" title="Room Code">
-          <button class="btn-secondary-custom py-1 px-2 fs-7" id="btn-copy-roomid" type="button" title="Copy Room ID">
-            <i class="fa-regular fa-copy"></i> <span class="d-none d-sm-inline">Code</span>
-          </button>
-          <button class="btn-secondary-custom py-1 px-2 fs-7" id="btn-copy-link" type="button" title="Copy Invite Link">
-            <i class="fa-solid fa-link text-warning"></i> <span class="d-none d-sm-inline">Invite</span>
-          </button>
+        <!-- Right Header Actions: Room ID, Copy Code, Copy Invite Link -->
+        <div class="header-room-actions">
+          <div class="input-group input-group-sm">
+            <input type="text" class="form-control-custom py-1 px-2 fs-7 text-center font-monospace" id="roomid" readonly title="Room Code">
+            <button class="btn-secondary-custom py-1 px-2 fs-7 d-inline-flex align-items-center gap-1" id="btn-copy-roomid" type="button" title="Copy Room ID">
+              <i class="fa-regular fa-copy"></i> <span>Code</span>
+            </button>
+            <button class="btn-secondary-custom py-1 px-2 fs-7 d-inline-flex align-items-center gap-1" id="btn-copy-link" type="button" title="Copy Invite Link">
+              <i class="fa-solid fa-link text-warning"></i> <span>Invite</span>
+            </button>
+          </div>
         </div>
+
       </div>
 
     </div>

@@ -182,6 +182,16 @@ a:hover {
   white-space: nowrap !important;
 }
 
+.header-room-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-room-actions #roomid {
+  max-width: 105px;
+}
+
 /* Hero & Room Selection Cards */
 .hero-badge {
   display: inline-flex;
@@ -1113,17 +1123,39 @@ a:hover {
     margin-bottom: 0.5rem !important;
   }
   .navbar-custom {
-    padding: 0.6rem 1rem !important;
+    padding: 0.5rem 0.75rem !important;
     position: sticky;
     top: 0;
     z-index: 1000;
-    margin-bottom: 1rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+  #room-brand-logo {
+    order: 1 !important;
+    margin-right: 0.25rem !important;
   }
   .header-url-form {
-    order: 3;
+    order: 2 !important;
+    flex: 1 1 auto !important;
+    max-width: none !important;
+    width: auto !important;
+    margin-top: 0 !important;
+  }
+  .header-room-actions {
+    order: 3 !important;
     width: 100% !important;
-    max-width: 100% !important;
-    margin-top: 0.25rem !important;
+    margin-top: 2px !important;
+  }
+  .header-room-actions .input-group {
+    width: 100% !important;
+  }
+  .header-room-actions #roomid {
+    max-width: none !important;
+    flex: 1 1 auto !important;
+  }
+  .header-room-actions .btn-secondary-custom {
+    padding: 0.25rem 0.5rem !important;
+    font-size: 0.75rem !important;
+    flex: 0 0 auto !important;
   }
   .video-grid {
     display: grid !important;
