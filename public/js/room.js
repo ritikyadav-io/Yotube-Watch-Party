@@ -845,7 +845,16 @@ socket.on("request_result", (data) => {
 // Approval Request handling for Host/Moderator
 socket.on("approval_request_received", (req) => {
   if (!req) return;
-  const videoTitle = (req.payload && req.payload.title) ? req.payload.title : 'Selected Video';
+  let videoTitle = 'Selected Video';
+  if (req.payload) {
+    if (req.payload.title) {
+      videoTitle = req.payload.title;
+    } else if (req.payload.action === 'next') {
+      videoTitle = 'Next Song in Playlist';
+    } else if (req.payload.action === 'prev') {
+      videoTitle = 'Previous Song in History';
+    }
+  }
 
   // 1. Interactive SweetAlert modal for Host
   swal({

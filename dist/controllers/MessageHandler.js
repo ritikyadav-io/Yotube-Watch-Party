@@ -230,13 +230,29 @@ class MessageHandler {
                         room.playbackState.updatedAt = Date.now();
                         this.io.to(room.id).emit("playVideoDirectly", req.payload);
                     }
+                    else if (req.type === 'play_request' && req.payload) {
+                        if (req.payload.action === 'next') {
+                            this.io.to(room.id).emit("playNextVideo");
+                        }
+                        else if (req.payload.action === 'prev') {
+                            this.io.to(room.id).emit("playPreviousVideo");
+                        }
+                        else if (req.payload.video_id) {
+                            room.playbackState.videoId = req.payload.video_id;
+                            room.playbackState.videoObj = req.payload;
+                            room.playbackState.currentTime = 0;
+                            room.playbackState.isPlaying = true;
+                            room.playbackState.updatedAt = Date.now();
+                            this.io.to(room.id).emit("playVideoDirectly", req.payload);
+                        }
+                    }
                     this.io.to(room.id).emit("message", {
                         username: "System",
-                        text: `Host approved ${req.username}'s video request!`
+                        text: `Host approved ${req.username}'s request!`
                     });
                     this.io.to(req.participantSocketId).emit("request_result", {
                         approved: true,
-                        message: "Host approved your video request!"
+                        message: "Host approved your request!"
                     });
                 }
                 else {
@@ -246,7 +262,7 @@ class MessageHandler {
                     });
                     this.io.to(req.participantSocketId).emit("request_result", {
                         approved: false,
-                        message: "Host declined your video request."
+                        message: "Host declined your request."
                     });
                 }
             });
