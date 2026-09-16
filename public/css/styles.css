@@ -988,6 +988,41 @@ a:hover {
   body {
     padding-top: 0 !important;
   }
+  main.container-fluid {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+  .row.g-3, .row.g-4 {
+    --bs-gutter-x: 0 !important;
+  }
+  .player-wrapper {
+    border-radius: 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+    margin: 0 !important;
+    width: 100% !important;
+    box-shadow: none !important;
+  }
+  .video-container {
+    padding-bottom: 56.25% !important;
+    width: 100% !important;
+  }
+  .player-control-bar {
+    padding: 0.5rem 0.75rem !important;
+    border-radius: 0 !important;
+  }
+  .player-controls-left .btn-sm {
+    padding: 0.3rem 0.6rem !important;
+    font-size: 0.75rem !important;
+  }
+  .glass-panel:not(.player-wrapper) {
+    margin-left: 0.5rem !important;
+    margin-right: 0.5rem !important;
+  }
+  .sidebar-panel {
+    margin-left: 0.5rem !important;
+    margin-right: 0.5rem !important;
+  }
   .hero-title {
     font-size: 1.55rem !important;
     line-height: 1.25 !important;
