@@ -1330,7 +1330,7 @@ function ensureYouTubePlayerLoaded(videoId) {
           'rel': 0,
           'modestbranding': 1,
           'autoplay': 1,
-          'mute': 1
+          'mute': 0
         },
         events: {
           'onReady': onPlayerReady,
@@ -1347,7 +1347,7 @@ function ensureYouTubePlayerLoaded(videoId) {
   // 3. Mobile / Network Fallback Embed: Render or update YouTube responsive iframe directly
   const playerContainer = document.getElementById('player');
   if (playerContainer) {
-    const embedUrl = `https://www.youtube.com/embed/${vidToPlay}?autoplay=1&playsinline=1&mute=1&enablejsapi=1&rel=0`;
+    const embedUrl = `https://www.youtube.com/embed/${vidToPlay}?autoplay=1&playsinline=1&enablejsapi=1&rel=0`;
     const existingIframe = playerContainer.querySelector('iframe');
     if (existingIframe) {
       if (!existingIframe.src.includes(vidToPlay)) {
@@ -1387,6 +1387,8 @@ function onPlayerError(event) {
 function onPlayerReady(event) {
   isPlayerReady = true;
   try {
+    event.target.unMute();
+    event.target.setVolume(100);
     event.target.playVideo();
   } catch (e) {}
 
