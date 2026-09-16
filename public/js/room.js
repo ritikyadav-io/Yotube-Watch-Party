@@ -1329,7 +1329,7 @@ function ensureYouTubePlayerLoaded(videoId) {
           'enablejsapi': 1,
           'rel': 0,
           'modestbranding': 1,
-          'autoplay': 1,
+          'autoplay': 0,
           'mute': 0
         },
         events: {
@@ -1347,7 +1347,7 @@ function ensureYouTubePlayerLoaded(videoId) {
   // 3. Mobile / Network Fallback Embed: Render or update YouTube responsive iframe directly
   const playerContainer = document.getElementById('player');
   if (playerContainer) {
-    const embedUrl = `https://www.youtube.com/embed/${vidToPlay}?autoplay=1&playsinline=1&enablejsapi=1&rel=0`;
+    const embedUrl = `https://www.youtube.com/embed/${vidToPlay}?autoplay=0&playsinline=1&enablejsapi=1&rel=0`;
     const existingIframe = playerContainer.querySelector('iframe');
     if (existingIframe) {
       if (!existingIframe.src.includes(vidToPlay)) {
@@ -1386,11 +1386,28 @@ function onPlayerError(event) {
 
 function onPlayerReady(event) {
   isPlayerReady = true;
+
+  const unlockAndUnmute = () => {
+    if (player && typeof player.unMute === 'function') {
+      try {
+        player.unMute();
+        player.setVolume(100);
+        player.playVideo();
+      } catch (e) {}
+    }
+  };
+
   try {
     event.target.unMute();
     event.target.setVolume(100);
     event.target.playVideo();
   } catch (e) {}
+
+  // Automatically unMute & play on any user gesture across document
+  ['pointerdown', 'touchstart', 'click', 'keydown'].forEach(evt => {
+    document.addEventListener(evt, unlockAndUnmute, { once: true });
+    window.addEventListener(evt, unlockAndUnmute, { once: true });
+  });
 
   if (pendingSyncState) {
     applyPendingSync();
