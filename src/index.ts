@@ -32,19 +32,27 @@ const io = new socketIO.Server(httpServer, {
     }
 });
 
-// Express REST endpoint for room checking
+// Express REST endpoint for room checking & browser redirection
 app.get("/room", (req, res) => {
-    res.setHeader("Content-Type", "application/json");
+    const isJsonRequest = req.headers.accept && req.headers.accept.includes('application/json');
     const username: string = (req.query.username as string) || '';
     const roomid: string = (req.query.roomid as string) || '';
 
-    const roomManager = RoomManager.getInstance();
+    if (isJsonRequest) {
+        res.setHeader("Content-Type", "application/json");
+        const roomManager = RoomManager.getInstance();
 
-    if (!roomid || !roomManager.checkIfRoomExists(roomid.trim())) {
-        res.status(200).json({ error: true, message: "Room ID does not exist. Please check the code." });
-    } else {
-        res.status(200).json({ error: false });
+        if (!roomid || !roomManager.checkIfRoomExists(roomid.trim())) {
+            res.status(200).json({ error: true, message: "Room ID does not exist. Please check the code." });
+        } else {
+            res.status(200).json({ error: false });
+        }
+        return;
     }
+
+    // Standard Browser Request: Redirect to /room.html with query parameters preserved
+    const queryStr = req.url.includes('?') ? req.url.substring(req.url.indexOf('?')) : '';
+    res.redirect(302, `/room.html${queryStr}`);
 });
 
 // Initialize OOP MessageHandler for Socket.IO
