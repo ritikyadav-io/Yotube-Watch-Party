@@ -873,20 +873,7 @@ const roomCategoryFilterMap = {
 };
 
 function initRoomVideoFeed() {
-  const pillsContainer = document.getElementById('room-category-pills');
-
   fetchRoomYouTubeVideos();
-
-  if (pillsContainer) {
-    pillsContainer.addEventListener('click', (e) => {
-      const pill = e.target.closest('.cat-pill');
-      if (!pill) return;
-      document.querySelectorAll('#room-category-pills .cat-pill').forEach(p => p.classList.remove('active'));
-      pill.classList.add('active');
-      const cat = pill.dataset.category;
-      fetchRoomYouTubeVideos(cat === 'trending' ? 'trending' : cat);
-    });
-  }
 }
 
 const categoryQueryMap = {
