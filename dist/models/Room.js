@@ -13,14 +13,14 @@ class Room {
         hostParticipant.role = Participant_1.Role.HOST;
         this.participants.set(hostParticipant.id, hostParticipant);
         const defaultVideo = {
-            title: "Ed Sheeran - Shape of You",
-            channel: "Ed Sheeran",
-            thumbnail_url: "https://i.ytimg.com/vi/JGwWNGJdvx8/hqdefault.jpg",
-            video_url: "https://www.youtube.com/watch?v=JGwWNGJdvx8",
-            video_id: "JGwWNGJdvx8"
+            title: "Trevor Daniel - Falling",
+            channel: "Trevor Daniel",
+            thumbnail_url: "https://i.ytimg.com/vi/L7mfjvdnPno/hqdefault.jpg",
+            video_url: "https://www.youtube.com/watch?v=L7mfjvdnPno",
+            video_id: "L7mfjvdnPno"
         };
         this.playbackState = {
-            videoId: 'JGwWNGJdvx8',
+            videoId: 'L7mfjvdnPno',
             videoObj: defaultVideo,
             currentTime: 0,
             isPlaying: true,

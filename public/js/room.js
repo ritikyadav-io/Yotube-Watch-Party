@@ -215,11 +215,11 @@ function initSidebarTabs() {
 
 async function initialSetup() {
   const defaultVideo = {
-    title: "Ed Sheeran - Shape of You",
-    channel: "Ed Sheeran",
-    thumbnail_url: "https://i.ytimg.com/vi/JGwWNGJdvx8/hqdefault.jpg",
-    video_url: "https://www.youtube.com/watch?v=JGwWNGJdvx8",
-    video_id: "JGwWNGJdvx8"
+    title: "Trevor Daniel - Falling",
+    channel: "Trevor Daniel",
+    thumbnail_url: "https://i.ytimg.com/vi/L7mfjvdnPno/hqdefault.jpg",
+    video_url: "https://www.youtube.com/watch?v=L7mfjvdnPno",
+    video_id: "L7mfjvdnPno"
   };
 
   // 1. Immediately load video into player UI so mobile/desktop never shows a black screen
@@ -451,7 +451,7 @@ function addVideoFromUrl(url, autoPlayIfFirst = false) {
         video_id: videoId
       };
 
-      if (autoPlayIfFirst || !currentVideoObj || currentVideoObj.video_id === 'JGwWNGJdvx8') {
+      if (autoPlayIfFirst || !currentVideoObj || currentVideoObj.video_id === 'L7mfjvdnPno') {
         currentVideoObj = video;
         loadVideoInPlayer(video);
         if (canControlPlayback()) {
@@ -472,7 +472,7 @@ function addVideoFromUrl(url, autoPlayIfFirst = false) {
         video_url: url,
         video_id: videoId
       };
-      if (autoPlayIfFirst || !currentVideoObj || currentVideoObj.video_id === 'JGwWNGJdvx8') {
+      if (autoPlayIfFirst || !currentVideoObj || currentVideoObj.video_id === 'L7mfjvdnPno') {
         currentVideoObj = video;
         loadVideoInPlayer(video);
         if (canControlPlayback()) {
@@ -1315,7 +1315,7 @@ function applyPendingSync() {
 }
 
 function ensureYouTubePlayerLoaded(videoId) {
-  const vidToPlay = videoId || (currentVideoObj ? currentVideoObj.video_id : 'JGwWNGJdvx8');
+  const vidToPlay = videoId || (currentVideoObj ? currentVideoObj.video_id : 'L7mfjvdnPno');
 
   // 1. If YT.Player instance is initialized and ready, use loadVideoById
   if (player && isPlayerReady && typeof player.loadVideoById === 'function') {
