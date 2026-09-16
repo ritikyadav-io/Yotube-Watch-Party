@@ -97,7 +97,7 @@ class MessageHandler {
                     socket.emit("permission_error", { message: perm.reason });
                     return;
                 }
-                socket.to(room.id).emit("playNextVideo");
+                this.io.to(room.id).emit("playNextVideo");
             });
             socket.on("playPreviousVideo", () => {
                 const room = this.roomManager.getRoomBySocketId(socket.id);
@@ -108,7 +108,7 @@ class MessageHandler {
                     socket.emit("permission_error", { message: perm.reason });
                     return;
                 }
-                socket.to(room.id).emit("playPreviousVideo");
+                this.io.to(room.id).emit("playPreviousVideo");
             });
             socket.on("playVideoDirectly", (videoObj) => {
                 const room = this.roomManager.getRoomBySocketId(socket.id);
@@ -124,14 +124,15 @@ class MessageHandler {
                 room.playbackState.currentTime = 0;
                 room.playbackState.isPlaying = true;
                 room.playbackState.updatedAt = Date.now();
-                socket.to(room.id).emit("playVideoDirectly", videoObj);
+                this.io.to(room.id).emit("playVideoDirectly", videoObj);
+                this.io.to(room.id).emit("sync_state", room.playbackState);
             });
             socket.on("playlistUpdated", (updatedPlaylist) => {
                 const room = this.roomManager.getRoomBySocketId(socket.id);
                 if (!room)
                     return;
                 room.playlist = updatedPlaylist;
-                socket.to(room.id).emit("playlistUpdated", updatedPlaylist);
+                this.io.to(room.id).emit("playlistUpdated", updatedPlaylist);
             });
             // ------------------------------------------------------------------
             // 3. Host Capabilities & RBAC Management

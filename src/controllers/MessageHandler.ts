@@ -119,7 +119,7 @@ export class MessageHandler {
                     return;
                 }
 
-                socket.to(room.id).emit("playNextVideo");
+                this.io.to(room.id).emit("playNextVideo");
             });
 
             socket.on("playPreviousVideo", () => {
@@ -132,7 +132,7 @@ export class MessageHandler {
                     return;
                 }
 
-                socket.to(room.id).emit("playPreviousVideo");
+                this.io.to(room.id).emit("playPreviousVideo");
             });
 
             socket.on("playVideoDirectly", (videoObj: any) => {
@@ -150,7 +150,9 @@ export class MessageHandler {
                 room.playbackState.currentTime = 0;
                 room.playbackState.isPlaying = true;
                 room.playbackState.updatedAt = Date.now();
-                socket.to(room.id).emit("playVideoDirectly", videoObj);
+
+                this.io.to(room.id).emit("playVideoDirectly", videoObj);
+                this.io.to(room.id).emit("sync_state", room.playbackState);
             });
 
             socket.on("playlistUpdated", (updatedPlaylist: any) => {
@@ -158,7 +160,7 @@ export class MessageHandler {
                 if (!room) return;
 
                 room.playlist = updatedPlaylist;
-                socket.to(room.id).emit("playlistUpdated", updatedPlaylist);
+                this.io.to(room.id).emit("playlistUpdated", updatedPlaylist);
             });
 
             // ------------------------------------------------------------------

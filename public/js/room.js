@@ -1545,7 +1545,9 @@ socket.on("sync_state", (state) => {
 
 socket.on("playVideoDirectly", (videoObj) => {
   if (videoObj && videoObj.video_id) {
-    if (currentVideoObj) historyQueue.push(currentVideoObj);
+    if (currentVideoObj && currentVideoObj.video_id !== videoObj.video_id) {
+      historyQueue.push(currentVideoObj);
+    }
     currentVideoObj = videoObj;
 
     const titleEl = document.getElementById('video-title') || $videoTitle;
@@ -1555,11 +1557,18 @@ socket.on("playVideoDirectly", (videoObj) => {
 
     pendingSyncState = { videoId: videoObj.video_id, currentTime: 0, isPlaying: true };
 
-    if (isPlayerReady && player && typeof player.loadVideoById === 'function') {
-      applyPendingSync();
+    if (player && typeof player.loadVideoById === 'function') {
+      try {
+        player.loadVideoById(videoObj.video_id, 0);
+        player.playVideo();
+      } catch (e) {
+        ensureYouTubePlayerLoaded(videoObj.video_id);
+      }
     } else {
-      initYouTubePlayer(videoObj.video_id);
+      ensureYouTubePlayerLoaded(videoObj.video_id);
     }
+
+    renderRoomVideoGrid(ROOM_CURATED);
   }
 });
 
