@@ -10,18 +10,8 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function initSmartNavbarScroll() {
-  let lastScrollY = window.scrollY;
-  window.addEventListener('scroll', () => {
-    const navbar = document.querySelector('.navbar-custom');
-    if (!navbar) return;
-    const currentScrollY = window.scrollY;
-    if (currentScrollY > 80 && currentScrollY > lastScrollY) {
-      navbar.classList.add('navbar-hidden');
-    } else {
-      navbar.classList.remove('navbar-hidden');
-    }
-    lastScrollY = currentScrollY;
-  });
+  const navbar = document.querySelector('.navbar-custom');
+  if (navbar) navbar.classList.remove('navbar-hidden');
 }
 
 // Curated Fallback Videos Catalog (100% Verified Valid YouTube IDs)
