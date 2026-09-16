@@ -1057,18 +1057,11 @@ function applyPendingSync() {
   try {
     const currentLoadedId = (typeof player.getVideoData === 'function') ? player.getVideoData().video_id : null;
     if (!currentLoadedId || currentLoadedId !== sync.videoId) {
-      if (sync.isPlaying) {
-        player.loadVideoById(sync.videoId, sync.currentTime);
-      } else {
-        player.cueVideoById(sync.videoId, sync.currentTime);
-      }
+      player.loadVideoById(sync.videoId, sync.currentTime);
+      player.playVideo();
     } else {
       player.seekTo(sync.currentTime, true);
-      if (sync.isPlaying) {
-        player.playVideo();
-      } else {
-        player.pauseVideo();
-      }
+      player.playVideo();
     }
   } catch (err) {
     console.warn("applyPendingSync warning:", err);
@@ -1081,6 +1074,7 @@ function initYouTubePlayer(videoId) {
   if (player) {
     if (isPlayerReady && typeof player.loadVideoById === 'function') {
       player.loadVideoById(vidToPlay, 0);
+      player.playVideo();
     }
     return;
   }
@@ -1097,7 +1091,7 @@ function initYouTubePlayer(videoId) {
         'start': 0,
         'disablekb': 0,
         'rel': 0,
-        'autoplay': 0
+        'autoplay': 1
       },
       events: {
         'onReady': onPlayerReady,
@@ -1142,9 +1136,9 @@ function onPlayerReady(event) {
     applyPendingSync();
   } else if (currentVideoObj) {
     loadVideoInPlayer(currentVideoObj);
-    event.target.pauseVideo();
+    event.target.playVideo();
   } else {
-    event.target.pauseVideo();
+    event.target.playVideo();
   }
 }
 

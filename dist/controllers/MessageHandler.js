@@ -29,7 +29,7 @@ class MessageHandler {
                 const room = result.room;
                 socket.join(room.id);
                 // Notify room
-                const message = `${userObj.username} joined the party 🎉`;
+                const message = `${userObj.username} joined the party.`;
                 socket.to(room.id).emit("message", { username: "System", text: message });
                 this.broadcastRoomUsers(room.id);
                 // Calculate live playback position based on elapsed time if video is currently playing

@@ -23,7 +23,7 @@ class Room {
             videoId: 'JGwWNGJdvx8',
             videoObj: defaultVideo,
             currentTime: 0,
-            isPlaying: false,
+            isPlaying: true,
             lastUpdatedBy: hostParticipant.username,
             updatedAt: Date.now()
         };

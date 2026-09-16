@@ -36,7 +36,7 @@ export class MessageHandler {
                 socket.join(room.id);
 
                 // Notify room
-                const message = `${userObj.username} joined the party 🎉`;
+                const message = `${userObj.username} joined the party.`;
                 socket.to(room.id).emit("message", { username: "System", text: message });
 
                 this.broadcastRoomUsers(room.id);
