@@ -1,74 +1,84 @@
 # 🎬 YouTube Watch Party System
 
-> **Intern Assignment Submission** – A real-time, synchronized YouTube Watch Party platform built with **Node.js, Express, TypeScript, Socket.IO, and HTML5/CSS3**. Supports Role-Based Access Control (RBAC), Object-Oriented WebSocket Server architecture, in-app YouTube video search & discovery, and participant request approval workflows.
+> **Real-Time Synchronized Video Streaming & Social Watch Party Platform**  
+> Built with **Node.js, Express, TypeScript, Socket.IO, HTML5, and CSS3**. Features real-time video synchronization, server-enforced Role-Based Access Control (RBAC), Object-Oriented WebSocket Server architecture, dynamic YouTube API video search & discovery, interactive participant song approval workflows, and host reconnection protection.
 
 ---
 
 ## 🌐 Live Deployments & Repository
-- ⚡ **Render Production Application:** [https://yotube-watch-party.onrender.com/](https://yotube-watch-party.onrender.com/) *(Full Node.js + WebSocket Production Server)*
-- 🌐 **Vercel Production Application:** [https://yotube-watch-party-six.vercel.app/](https://yotube-watch-party-six.vercel.app/) *(Global CDN Frontend)*
+- ⚡ **Render Production App:** [https://yotube-watch-party.onrender.com/](https://yotube-watch-party.onrender.com/) *(Full Node.js + WebSocket Server)*
+- 🌐 **Vercel Production App:** [https://yotube-watch-party-six.vercel.app/](https://yotube-watch-party-six.vercel.app/) *(Global CDN Frontend)*
 - 📦 **GitHub Repository:** [https://github.com/ritikyadav-io/Yotube-Watch-Party](https://github.com/ritikyadav-io/Yotube-Watch-Party)
 
 ---
 
-## 🚀 Key Features
+## 🚀 Key Features & Highlights
 
-1. **Real-time Video Synchronization:** All participants in a room see synchronized video state (play, pause, seek, current video, and playlist queue).
-2. **Room-Based Access Model:** Create new rooms or join existing rooms via unique Room ID or invite link.
-3. **In-App Embedded Playback:** YouTube videos play strictly inside the embedded YouTube IFrame player without redirecting users to external sites.
-4. **Role-Based Access Control (RBAC):**
-   - 👑 **Host (Creator):** Full administrative control (play/pause, seek, change video, assign roles, kick participants, transfer host role).
-   - 🛡️ **Moderator:** Playback control (play/pause, seek, change video).
-   - 👤 **Participant:** Watch-only mode. Restricted from direct playback control; can submit approval requests to Host/Moderators.
-5. **Backend Role Validation:** Permission checks are strictly enforced on the server before processing or broadcasting playback events.
-6. **Participant Request Approval Workflow:** When a Participant requests a video change or play action, Host and Moderators receive a real-time prompt to Approve or Reject.
-7. **Below-Player YouTube Discovery Feed:** Search YouTube videos or browse curated category feeds (*Trending, Music, Gaming, Tech, Entertainment*) directly below the player. Includes a YouTube API Key Manager modal.
-8. **Live Chat & Member List:** Real-time messaging with Host badges, online user lists, and host management dropdowns.
+1. **Sub-Second Video Synchronization:** All participants in a room stay in lockstep synchronization (play, pause, seek, video switching, and playlist queue). Joining participants automatically seek to the host's exact live playback timestamp (e.g. 5:00) with zero manual refresh.
+2. **Dynamic YouTube API Video Search:** In-app search bar and category pills query live YouTube search results via `/api/youtube/search`. The **"Watch More Songs"** feed dynamically rotates through diverse top search queries without repeating video cards.
+3. **Server-Enforced Role-Based Access Control (RBAC):**
+   - 👑 **Host (Creator):** Full administrative & playback authority (play/pause, seek, change video, next/prev, assign roles, kick users, transfer host).
+   - 🛡️ **Moderator:** Full playback control (play/pause, seek, change video).
+   - 👤 **Participant:** Watch-only mode. Direct video changes are restricted; participants can submit song requests to the Host.
+4. **Interactive Request Approval Workflow:** When a Participant clicks a song or action, an interactive modal (*"🎵 Song Approval Request"*) pops up on the Host's screen with **Approve & Play** and **Decline** options.
+5. **Host Disconnection Protection:** Implements a 15-second grace period (`hostDisconnectTimer`) on the server. If the Host's mobile screen dims or network flickers, the server preserves their `Role.HOST` status upon reconnection instead of auto-demoting them.
+6. **Strict Capacity & Privacy Controls:** Enforces a maximum limit of 5 participants per room. Room Code and Invite Link controls are visible strictly to the Room Host.
+7. **Live Chat & Online Room Roster:** Integrated real-time messaging with Host/Moderator badges, unread message badges, system join/leave toasts, and dropdown management controls.
 
 ---
 
 ## 🏗️ Architecture & WebSockets Flow
 
-### WebSockets Integration Flow
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Host as 👑 Host (Client)
+    participant Server as ⚙️ Node.js WebSocket Server
+    participant Room as 🧱 Room / RoomManager
+    actor Participant as 👤 Participant (Client)
 
-```
-[Client A (Host)]      --->  (Socket.IO Event: videoPlaying / seek)
-                              |
-                              v
-                      [MessageHandler Controller]
-                              |
-                     (Permission Validation via Room.ts)
-                              |
-                              +--> Allowed? Yes ---> Broadcast to Room ---> [Client B (Participant)]
-                              |
-                              +--> Allowed? No  ---> Emit permission_error ---> [Client C (Restricted)]
-```
+    Host->>Server: emit("createRoom", { username })
+    Server->>Room: RoomManager.createRoom()
+    Room-->>Server: Room & Host Instance
+    Server-->>Host: emit("getRoomID", roomId)
 
-- **Transport:** Socket.IO over WebSocket (with HTTP long-polling fallback).
-- **Session Lifecycle:** User joins a room -> `RoomManager` registers socket -> Server assigns role (Host if creator, else Participant) -> Server broadcasts updated `roomUsersList` and latest `sync_state`.
+    Participant->>Server: emit("joinRoom", { username, roomId })
+    Server->>Room: RoomManager.joinRoom()
+    Room-->>Server: Success + Role.PARTICIPANT
+    Server-->>Participant: emit("sync_state", { videoId, currentTime, isPlaying })
+    Server-->>Host: broadcast("roomUsersList", users)
+
+    Host->>Server: emit("playVideoDirectly", videoObj)
+    Server->>Room: validatePermission(socket.id, "change_video")
+    Room-->>Server: Allowed = true
+    Server-->>Host: emit("playVideoDirectly", videoObj)
+    Server-->>Participant: emit("playVideoDirectly", videoObj)
+```
 
 ---
 
-## 🧱 Object-Oriented Server Design (OOP)
+## 🧱 Object-Oriented Server Architecture (OOP)
 
-The WebSocket server is structured using clean OOP design patterns:
+The WebSocket server is built using clean Object-Oriented Programming (OOP) design patterns in TypeScript:
 
 ```
 src/
 ├── models/
-│   ├── Participant.ts    # Encapsulates user identity, socket ID, role enum, and permission checks
-│   ├── Room.ts           # Encapsulates room state, participant map, queue, kick, role assignment logic
-│   └── RoomManager.ts    # Singleton registry managing room creation, lookup, and lifecycle
+│   ├── Participant.ts    # User entity (socketId, username, Role enum, permission checks)
+│   ├── Room.ts           # Room aggregate (playbackState, participants Map, queue, approval requests, grace timer)
+│   └── RoomManager.ts    # Singleton registry managing active Room lifecycles & socket mappings
 ├── controllers/
-│   └── MessageHandler.ts # Handles Socket.IO event registrations, RBAC dispatching, and broadcasts
-└── index.ts              # Entry point initializing Express, HTTP server, and MessageHandler
+│   └── MessageHandler.ts # OOP Socket.IO controller handling events, RBAC dispatching, and broadcasts
+├── utils/
+│   └── generateRoomID.ts # Helper generating clean 4-digit room IDs
+└── index.ts              # Entry point initializing Express REST API, HTTP server, and MessageHandler
 ```
 
 ### OOP Class Summary:
-- **`Participant` Class:** Manages socket ID, username, room assignment, role (`HOST` | `MODERATOR` | `PARTICIPANT`), and `hasPermission(action)` method.
-- **`Room` Class:** Stores playback state (`videoId`, `currentTime`, `isPlaying`), participant collections, queue, and permission validation logic (`validatePermission`, `assignRole`, `kickParticipant`, `transferHost`).
-- **`RoomManager` Class:** Singleton managing active `Room` instances and socket-to-room mappings.
-- **`MessageHandler` Class:** Encapsulates all WebSocket event listeners and connects incoming events with `RoomManager`.
+- **`Participant` Class:** Manages user identity, socket connection ID, room association, role (`HOST` | `MODERATOR` | `PARTICIPANT`), and permission validation via `hasPermission(action)`.
+- **`Room` Class:** Manages live `playbackState` (`videoId`, `currentTime`, `isPlaying`), participant maps, playlist queue, host reconnection timers (`hostDisconnectTimer`), and permission enforcement (`validatePermission`, `submitApprovalRequest`, `handleApprovalRequest`, `kickParticipant`, `transferHost`).
+- **`RoomManager` Class:** Singleton registry managing room lookup, case-normalized room joins, capacity checks (max 5), and 60-second empty room grace period cleanup.
+- **`MessageHandler` Class:** Encapsulates all Socket.IO WebSocket event handlers and orchestrates real-time events between clients and `RoomManager`.
 
 ---
 
@@ -76,11 +86,12 @@ src/
 
 | Feature / Action | 👑 Host | 🛡️ Moderator | 👤 Participant |
 | :--- | :---: | :---: | :---: |
-| Watch Video Stream | ✅ | ✅ | ✅ |
+| Watch Synchronized Video | ✅ | ✅ | ✅ |
 | Live Chat & Messaging | ✅ | ✅ | ✅ |
-| Play / Pause Video | ✅ | ✅ | ❌ *(Request Approval)* |
-| Seek Position | ✅ | ✅ | ❌ *(Request Approval)* |
-| Change / Add Video | ✅ | ✅ | ❌ *(Request Approval)* |
+| Play / Pause Playback | ✅ | ✅ | ❌ *(Requires Host Approval)* |
+| Seek Video Position | ✅ | ✅ | ❌ *(Requires Host Approval)* |
+| Direct Video Change | ✅ | ✅ | ❌ *(Requires Host Approval)* |
+| Approve / Decline Requests | ✅ | ✅ | ❌ |
 | Assign / Revoke Roles | ✅ | ❌ | ❌ |
 | Transfer Host Role | ✅ | ❌ | ❌ |
 | Kick Participant | ✅ | ❌ | ❌ |
@@ -91,20 +102,22 @@ src/
 
 | Event Name | Direction | Payload | Description |
 | :--- | :--- | :--- | :--- |
-| `createRoom` | Client ➔ Server | `{ username }` | Host creates a new room. Server returns `getRoomID`. |
-| `joinRoom` | Client ➔ Server | `{ username, roomid }` | User joins room. Assigned Host if first, else Participant. |
-| `sync_state` | Server ➔ Client | `{ videoId, currentTime, isPlaying }` | Broadcasts current video state to newly joined user. |
-| `videoPlaying` | Client ➔ Server ➔ Client | `currentTime` | User pressed play/started playing. Server validates RBAC and broadcasts. |
-| `videoPaused` | Client ➔ Server ➔ Client | `{}` | User paused video. Server validates RBAC and broadcasts. |
-| `seek` | Client ➔ Server ➔ Client | `currentTime` | User scrubbed video timeline. Server validates RBAC and broadcasts. |
-| `playVideoDirectly` | Client ➔ Server ➔ Client | `{ video_id, title, channel }` | Changes current playing video. Server validates RBAC and broadcasts. |
-| `assign_role` | Client ➔ Server | `{ targetSocketId, role }` | Host assigns `MODERATOR` or `PARTICIPANT` role. |
-| `transfer_host` | Client ➔ Server | `{ targetSocketId }` | Host transfers Host privileges to another participant. |
+| `createRoom` | Client ➔ Server | `{ username }` | Creates a new room. Server returns `getRoomID`. |
+| `joinRoom` | Client ➔ Server | `{ username, roomid }` | User joins room. Validates capacity and assigns role. |
+| `sync_state` | Server ➔ Client | `{ videoId, currentTime, isPlaying }` | Sends live playback state and calculated live time to joiners. |
+| `videoPlaying` | Client ➔ Server ➔ Client | `currentTime` | Updates live playback position. Server validates RBAC and broadcasts. |
+| `videoPaused` | Client ➔ Server ➔ Client | `{}` | Pauses video for room. Server validates RBAC and broadcasts. |
+| `seek` | Client ➔ Server ➔ Client | `currentTime` | Seeks video position across all room participants. |
+| `playVideoDirectly` | Client ➔ Server ➔ Client | `{ video_id, title, channel }` | Plays selected video directly. Server validates RBAC and broadcasts. |
+| `playNextVideo` | Client ➔ Server ➔ Client | `{}` | Plays next video from queue/catalog for everyone. |
+| `playPreviousVideo` | Client ➔ Server ➔ Client | `{}` | Plays previous video from history for everyone. |
+| `request_action` | Client ➔ Server | `{ type, payload }` | Participant requests Host approval to play a video or change playback. |
+| `approval_request_received` | Server ➔ Client (Host) | `{ id, username, type, payload }` | Delivers song approval request modal to Host. |
+| `handle_request` | Client (Host) ➔ Server | `{ requestId, approve }` | Host approves or declines participant request. |
+| `request_result` | Server ➔ Client | `{ approved, message }` | Notifies requesting participant of Host decision. |
+| `assign_role` | Client ➔ Server | `{ targetSocketId, role }` | Host promotes user to `MODERATOR` or demotes to `PARTICIPANT`. |
+| `transfer_host` | Client ➔ Server | `{ targetSocketId }` | Host transfers Host privileges to another member. |
 | `remove_participant` | Client ➔ Server | `{ targetSocketId }` | Host kicks participant from room. |
-| `kicked_from_room` | Server ➔ Client | `{ message }` | Target socket receives kick notification and disconnects. |
-| `request_action` | Client ➔ Server | `{ type, payload }` | Participant requests Host/Mod to approve video change or playback. |
-| `handle_request` | Client ➔ Server | `{ requestId, approve }` | Host/Mod approves or rejects participant request. |
-| `sendMessage` | Client ➔ Server ➔ Client | `{ text }` | Broadcasts live chat message. |
 
 ---
 
@@ -124,61 +137,62 @@ To scale this system horizontally across multiple server nodes to handle **1,000
                                (Socket.IO Redis Adapter)
 ```
 
-1. **Socket.IO Redis Adapter:** Attach `@socket.io/redis-adapter` to publish and subscribe events across multiple Node.js instances. A broadcast in Room X on Node 1 is immediately relayed via Redis Pub/Sub to Node 2 where other participants are connected.
-2. **Stateless Room State & Redis Store:** Store room metadata and active participant mappings in Redis (or PostgreSQL) instead of in-memory maps.
-3. **Load Balancing with Sticky Sessions:** Use Nginx or AWS Application Load Balancer with HTTP cookie sticky sessions to maintain WebSocket handshake consistency.
-4. **Connection Pooling:** Optimize WebSocket ping/pong intervals and set max connection limits per node.
+1. **Socket.IO Redis Adapter:** Attach `@socket.io/redis-adapter` to publish and subscribe events across multiple Node.js server instances. A broadcast in Room X on Node 1 is immediately relayed via Redis Pub/Sub to Node 2 where other participants are connected.
+2. **Stateless Room State & Redis Store:** Store room metadata, playback state, and socket mappings in Redis (or PostgreSQL) instead of local in-memory Maps.
+3. **Load Balancing with Sticky Sessions:** Configure Nginx or AWS Application Load Balancer with HTTP cookie sticky sessions to maintain WebSocket handshake consistency.
+4. **Connection Pooling & Heartbeats:** Tune WebSocket ping/pong intervals and set max connection limits per node.
 
 ---
 
 ## 💻 Local Setup & Execution Guide
 
 ### Prerequisites
-- Node.js (v16.x or higher)
-- npm (v8.x or higher)
+- **Node.js** (v16.x or higher)
+- **npm** (v8.x or higher)
 
-### Installation
-1. Clone the repository:
+### Installation Steps
+
+1. **Clone the repository:**
    ```bash
    git clone https://github.com/ritikyadav-io/Yotube-Watch-Party.git
    cd Yotube-Watch-Party
    ```
 
-2. Install dependencies:
+2. **Install dependencies:**
    ```bash
    npm install
    ```
 
-3. Build the TypeScript code:
+3. **Build the TypeScript code:**
    ```bash
    npm run build
    ```
 
-4. Start the development server:
+4. **Start the development server:**
    ```bash
    npm run dev
    ```
 
-5. Open your browser and navigate to:
+5. **Open your browser and navigate to:**
    ```
    http://localhost:3000
    ```
 
 ---
 
-## ☁️ Deployment Instructions (Render / Vercel / Railway)
+## ☁️ Deployment Guide (Render / Vercel)
 
-### Deploying to Render (Recommended for WebSocket Support)
-1. Push your repository to GitHub.
+### Deploying to Render (Recommended for Full WebSocket Server)
+1. Push your latest code to GitHub.
 2. Log into [Render.com](https://render.com) and click **New + > Web Service**.
-3. Connect your GitHub repository (`Youtube-Party`).
-4. Set configuration:
-   - **Environment:** Node
+3. Select your GitHub repository (`Yotube-Watch-Party`).
+4. Configure service settings:
+   - **Environment:** `Node`
    - **Build Command:** `npm install && npm run build`
    - **Start Command:** `npm start`
-5. Click **Create Web Service**. Your live URL will be generated (e.g., `https://youtube-party.onrender.com`).
+5. Click **Create Web Service**. Your live URL will be generated (e.g., `https://yotube-watch-party.onrender.com`).
 
 ---
 
 ## 📜 License
-This project is licensed under the ISC License.
+This project is licensed under the **ISC License**.
