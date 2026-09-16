@@ -1002,8 +1002,10 @@ function initYouTubePlayer(videoId) {
       playerVars: {
         'playsinline': 1,
         'controls': control,
+        'enablejsapi': 1,
+        'origin': window.location.origin,
         'start': 0,
-        'disablekb': 1,
+        'disablekb': 0,
         'rel': 0,
         'autoplay': 0
       },
