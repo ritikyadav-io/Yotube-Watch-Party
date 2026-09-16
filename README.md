@@ -27,36 +27,6 @@
 
 ---
 
-## 🏗️ Architecture & WebSockets Flow
-
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Host as 👑 Host (Client)
-    participant Server as ⚙️ Node.js WebSocket Server
-    participant Room as 🧱 Room / RoomManager
-    actor Participant as 👤 Participant (Client)
-
-    Host->>Server: emit("createRoom", { username })
-    Server->>Room: RoomManager.createRoom()
-    Room-->>Server: Room & Host Instance
-    Server-->>Host: emit("getRoomID", roomId)
-
-    Participant->>Server: emit("joinRoom", { username, roomId })
-    Server->>Room: RoomManager.joinRoom()
-    Room-->>Server: Success + Role.PARTICIPANT
-    Server-->>Participant: emit("sync_state", { videoId, currentTime, isPlaying })
-    Server-->>Host: broadcast("roomUsersList", users)
-
-    Host->>Server: emit("playVideoDirectly", videoObj)
-    Server->>Room: validatePermission(socket.id, "change_video")
-    Room-->>Server: Allowed = true
-    Server-->>Host: emit("playVideoDirectly", videoObj)
-    Server-->>Participant: emit("playVideoDirectly", videoObj)
-```
-
----
-
 ## 🧱 Object-Oriented Server Architecture (OOP)
 
 The WebSocket server is built using clean Object-Oriented Programming (OOP) design patterns in TypeScript:
