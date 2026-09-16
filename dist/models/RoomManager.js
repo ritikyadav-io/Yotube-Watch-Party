@@ -16,7 +16,7 @@ class RoomManager {
         return RoomManager.instance;
     }
     createRoom(username, socketId) {
-        const roomId = generateRoomID_1.generateRoomID();
+        const roomId = generateRoomID_1.generateRoomID().trim().toUpperCase();
         const rawName = (username && typeof username === 'string') ? username.trim() : '';
         const hostName = rawName || `Host-${socketId.substring(0, 4)}`;
         const host = new Participant_1.Participant(socketId, hostName, roomId, Participant_1.Role.HOST);
@@ -25,7 +25,8 @@ class RoomManager {
         this.socketToRoom.set(socketId, roomId);
         return { room, host };
     }
-    joinRoom(roomId, username, socketId) {
+    joinRoom(rawRoomId, username, socketId) {
+        const roomId = (rawRoomId && typeof rawRoomId === 'string') ? rawRoomId.trim().toUpperCase() : '';
         const room = this.rooms.get(roomId);
         if (!room) {
             return { success: false, error: "Room ID does not exist." };
@@ -44,7 +45,10 @@ class RoomManager {
         this.socketToRoom.set(socketId, roomId);
         return { success: true, room, participant };
     }
-    getRoom(roomId) {
+    getRoom(rawRoomId) {
+        if (!rawRoomId)
+            return undefined;
+        const roomId = rawRoomId.trim().toUpperCase();
         return this.rooms.get(roomId);
     }
     getRoomBySocketId(socketId) {
@@ -68,13 +72,19 @@ class RoomManager {
         }
         return { room, participant };
     }
-    checkIfUserExists(username, roomId) {
+    checkIfUserExists(username, rawRoomId) {
+        if (!rawRoomId)
+            return false;
+        const roomId = rawRoomId.trim().toUpperCase();
         const room = this.rooms.get(roomId);
         if (!room)
             return false;
         return room.getParticipantsList().some(p => p.username.toLowerCase() === username.trim().toLowerCase());
     }
-    checkIfRoomExists(roomId) {
+    checkIfRoomExists(rawRoomId) {
+        if (!rawRoomId)
+            return false;
+        const roomId = rawRoomId.trim().toUpperCase();
         return this.rooms.has(roomId);
     }
 }

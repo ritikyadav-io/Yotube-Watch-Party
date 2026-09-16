@@ -233,19 +233,19 @@ async function initialSetup() {
   // 2. Immediately set or generate Room ID in UI input field
   const roomInput = document.getElementById("roomid");
   if (params.has('roomid')) {
-    roomid = params.get('roomid');
+    roomid = params.get('roomid').trim().toUpperCase();
     if (roomInput) roomInput.value = roomid;
     if (socket) socket.emit("joinRoom", { username, roomid });
   } else {
-    const generatedId = 'ROOM-' + Math.floor(1000 + Math.random() * 9000);
-    roomid = generatedId;
-    if (roomInput) roomInput.value = roomid;
     if (socket) socket.emit("createRoom", { username });
 
     socket.on("getRoomID", (id) => {
       if (id) {
-        roomid = id;
-        if (roomInput) roomInput.value = id;
+        roomid = id.trim().toUpperCase();
+        if (roomInput) roomInput.value = roomid;
+        if (currentVideoObj) {
+          socket.emit("playVideoDirectly", currentVideoObj);
+        }
       }
     });
   }
@@ -725,7 +725,21 @@ function attachHostControlListeners() {
   });
 }
 
-// RBAC Event Feedback
+// RBAC Event Feedback & General Errors
+socket.on("error", (data) => {
+  if (data && data.message) {
+    if (window.swal) {
+      swal("Room Notice", data.message, "warning").then(() => {
+        if (data.message.includes("Room ID does not exist")) {
+          window.location.href = "/";
+        }
+      });
+    } else {
+      showToast(data.message, "fa-circle-exclamation");
+    }
+  }
+});
+
 socket.on("permission_error", (data) => {
   swal("Permission Restricted", data.message, "warning");
 });

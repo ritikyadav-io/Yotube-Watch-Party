@@ -17,7 +17,7 @@ export class RoomManager {
     }
 
     public createRoom(username: string, socketId: string): { room: Room; host: Participant } {
-        const roomId = generateRoomID();
+        const roomId = generateRoomID().trim().toUpperCase();
         const rawName = (username && typeof username === 'string') ? username.trim() : '';
         const hostName = rawName || `Host-${socketId.substring(0, 4)}`;
         const host = new Participant(socketId, hostName, roomId, Role.HOST);
@@ -29,7 +29,8 @@ export class RoomManager {
         return { room, host };
     }
 
-    public joinRoom(roomId: string, username: string, socketId: string): { success: boolean; room?: Room; participant?: Participant; error?: string } {
+    public joinRoom(rawRoomId: string, username: string, socketId: string): { success: boolean; room?: Room; participant?: Participant; error?: string } {
+        const roomId = (rawRoomId && typeof rawRoomId === 'string') ? rawRoomId.trim().toUpperCase() : '';
         const room = this.rooms.get(roomId);
         if (!room) {
             return { success: false, error: "Room ID does not exist." };
@@ -53,7 +54,9 @@ export class RoomManager {
         return { success: true, room, participant };
     }
 
-    public getRoom(roomId: string): Room | undefined {
+    public getRoom(rawRoomId: string): Room | undefined {
+        if (!rawRoomId) return undefined;
+        const roomId = rawRoomId.trim().toUpperCase();
         return this.rooms.get(roomId);
     }
 
@@ -82,13 +85,17 @@ export class RoomManager {
         return { room, participant };
     }
 
-    public checkIfUserExists(username: string, roomId: string): boolean {
+    public checkIfUserExists(username: string, rawRoomId: string): boolean {
+        if (!rawRoomId) return false;
+        const roomId = rawRoomId.trim().toUpperCase();
         const room = this.rooms.get(roomId);
         if (!room) return false;
         return room.getParticipantsList().some(p => p.username.toLowerCase() === username.trim().toLowerCase());
     }
 
-    public checkIfRoomExists(roomId: string): boolean {
+    public checkIfRoomExists(rawRoomId: string): boolean {
+        if (!rawRoomId) return false;
+        const roomId = rawRoomId.trim().toUpperCase();
         return this.rooms.has(roomId);
     }
 }

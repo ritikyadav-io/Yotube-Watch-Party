@@ -19,9 +19,11 @@ class MessageHandler {
                 socket.join(room.id);
                 socket.emit("getRoomID", room.id);
                 this.broadcastRoomUsers(room.id);
+                socket.emit("sync_state", room.playbackState);
             });
             socket.on("joinRoom", (userObj) => {
-                const result = this.roomManager.joinRoom(userObj.roomid, userObj.username, socket.id);
+                const cleanRoomId = (userObj.roomid && typeof userObj.roomid === 'string') ? userObj.roomid.trim().toUpperCase() : '';
+                const result = this.roomManager.joinRoom(cleanRoomId, userObj.username, socket.id);
                 if (!result.success || !result.room) {
                     socket.emit("error", { message: result.error || "Cannot join room." });
                     return;
@@ -29,7 +31,8 @@ class MessageHandler {
                 const room = result.room;
                 socket.join(room.id);
                 // Notify room
-                const message = `${userObj.username} joined the party.`;
+                const joinedName = result.participant ? result.participant.username : userObj.username;
+                const message = `${joinedName} joined the party.`;
                 socket.to(room.id).emit("message", { username: "System", text: message });
                 this.broadcastRoomUsers(room.id);
                 // Calculate live playback position based on elapsed time if video is currently playing
