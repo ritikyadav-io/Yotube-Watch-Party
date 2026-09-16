@@ -163,6 +163,3 @@ To scale this system horizontally across multiple server nodes to handle **1,000
 5. Click **Create Web Service**. Your live URL will be generated (e.g., `https://yotube-watch-party.onrender.com`).
 
 ---
-
-## 📜 License
-This project is licensed under the **ISC License**.
