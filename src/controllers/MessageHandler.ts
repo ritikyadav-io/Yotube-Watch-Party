@@ -139,6 +139,12 @@ export class MessageHandler {
                 const room = this.roomManager.getRoomBySocketId(socket.id);
                 if (!room || !videoObj || !videoObj.video_id) return;
 
+                const perm = room.validatePermission(socket.id, "change_video");
+                if (!perm.allowed) {
+                    socket.emit("permission_error", { message: perm.reason || "Only the Room Host can change the video." });
+                    return;
+                }
+
                 room.playbackState.videoId = videoObj.video_id;
                 room.playbackState.videoObj = videoObj;
                 room.playbackState.currentTime = 0;

@@ -1048,6 +1048,10 @@ function appendRoomVideoGrid(videos) {
     };
 
     card.addEventListener('click', () => {
+      if (!canControlPlayback()) {
+        requestPlaybackAction('change_video', videoObj);
+        return;
+      }
       if (currentVideoObj) historyQueue.push(currentVideoObj);
       currentVideoObj = videoObj;
       loadVideoInPlayer(videoObj);
@@ -1057,6 +1061,10 @@ function appendRoomVideoGrid(videos) {
 
     card.querySelector('.btn-play-now').addEventListener('click', (e) => {
       e.stopPropagation();
+      if (!canControlPlayback()) {
+        requestPlaybackAction('change_video', videoObj);
+        return;
+      }
       if (currentVideoObj) historyQueue.push(currentVideoObj);
       currentVideoObj = videoObj;
       loadVideoInPlayer(videoObj);
@@ -1181,6 +1189,10 @@ function renderRoomVideoGrid(videos, isUserSearch = false, isCustomSearch = fals
     };
 
     card.addEventListener('click', () => {
+      if (!canControlPlayback()) {
+        requestPlaybackAction('change_video', videoObj);
+        return;
+      }
       if (currentVideoObj) historyQueue.push(currentVideoObj);
       currentVideoObj = videoObj;
       loadVideoInPlayer(videoObj);
@@ -1190,6 +1202,10 @@ function renderRoomVideoGrid(videos, isUserSearch = false, isCustomSearch = fals
 
     card.querySelector('.btn-play-now').addEventListener('click', (e) => {
       e.stopPropagation();
+      if (!canControlPlayback()) {
+        requestPlaybackAction('change_video', videoObj);
+        return;
+      }
       if (currentVideoObj) historyQueue.push(currentVideoObj);
       currentVideoObj = videoObj;
       loadVideoInPlayer(videoObj);
