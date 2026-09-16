@@ -217,11 +217,11 @@ async function initialSetup() {
     document.getElementById("roomid").value = roomid;
   } else {
     const defaultVideo = {
-      title: "Shawn Mendes - Treat You Better",
-      channel: "Shawn Mendes",
-      thumbnail_url: "https://i.ytimg.com/vi/sQVeK7dT18Y/hqdefault.jpg",
-      video_url: "https://www.youtube.com/watch?v=sQVeK7dT18Y",
-      video_id: "sQVeK7dT18Y"
+      title: "Ed Sheeran - Shape of You",
+      channel: "Ed Sheeran",
+      thumbnail_url: "https://i.ytimg.com/vi/JGwWNGJdvx8/hqdefault.jpg",
+      video_url: "https://www.youtube.com/watch?v=JGwWNGJdvx8",
+      video_id: "JGwWNGJdvx8"
     };
 
     socket.emit("createRoom", { username });
@@ -442,7 +442,7 @@ function addVideoFromUrl(url, autoPlayIfFirst = false) {
         video_id: videoId
       };
 
-      if (autoPlayIfFirst || !currentVideoObj || currentVideoObj.video_id === 'sQVeK7dT18Y') {
+      if (autoPlayIfFirst || !currentVideoObj || currentVideoObj.video_id === 'JGwWNGJdvx8') {
         currentVideoObj = video;
         loadVideoInPlayer(video);
         if (canControlPlayback()) {
@@ -463,7 +463,7 @@ function addVideoFromUrl(url, autoPlayIfFirst = false) {
         video_url: url,
         video_id: videoId
       };
-      if (autoPlayIfFirst || !currentVideoObj || currentVideoObj.video_id === 'sQVeK7dT18Y') {
+      if (autoPlayIfFirst || !currentVideoObj || currentVideoObj.video_id === 'JGwWNGJdvx8') {
         currentVideoObj = video;
         loadVideoInPlayer(video);
         if (canControlPlayback()) {
@@ -1072,7 +1072,7 @@ function applyPendingSync() {
 }
 
 function initYouTubePlayer(videoId) {
-  const vidToPlay = videoId || (currentVideoObj ? currentVideoObj.video_id : 'sQVeK7dT18Y');
+  const vidToPlay = videoId || (currentVideoObj ? currentVideoObj.video_id : 'JGwWNGJdvx8');
 
   if (player) {
     if (isPlayerReady && typeof player.loadVideoById === 'function') {

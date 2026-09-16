@@ -42,15 +42,15 @@ export class Room {
         this.participants.set(hostParticipant.id, hostParticipant);
 
         const defaultVideo = {
-            title: "Shawn Mendes - Treat You Better",
-            channel: "Shawn Mendes",
-            thumbnail_url: "https://i.ytimg.com/vi/sQVeK7dT18Y/hqdefault.jpg",
-            video_url: "https://www.youtube.com/watch?v=sQVeK7dT18Y",
-            video_id: "sQVeK7dT18Y"
+            title: "Ed Sheeran - Shape of You",
+            channel: "Ed Sheeran",
+            thumbnail_url: "https://i.ytimg.com/vi/JGwWNGJdvx8/hqdefault.jpg",
+            video_url: "https://www.youtube.com/watch?v=JGwWNGJdvx8",
+            video_id: "JGwWNGJdvx8"
         };
 
         this.playbackState = {
-            videoId: 'sQVeK7dT18Y',
+            videoId: 'JGwWNGJdvx8',
             videoObj: defaultVideo,
             currentTime: 0,
             isPlaying: false,
