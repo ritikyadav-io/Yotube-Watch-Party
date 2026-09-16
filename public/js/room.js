@@ -3,7 +3,7 @@
 // ==========================================================================
 
 var serverUrl = window.location.hostname.includes('vercel.app')
-  ? 'https://youtube-watch-party.onrender.com'
+  ? 'https://yotube-watch-party.onrender.com'
   : undefined;
 
 var socket = io(serverUrl, {
