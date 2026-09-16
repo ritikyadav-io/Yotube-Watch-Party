@@ -115,33 +115,32 @@ function initRoomForms() {
   const joinRoomId = document.getElementById('join-roomid');
 
   if (joinForm) {
-    joinForm.addEventListener('submit', (e) => {
+    joinForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const username = joinUsername.value.trim();
       const roomid = joinRoomId.value.trim();
 
-      if (!username || !roomid) return;
+      if (!username || !roomid) {
+        swal("Missing Information", "Please enter both your username and Room ID.", "warning");
+        return;
+      }
 
-      const xhr = new XMLHttpRequest();
       const serverPrefix = window.location.hostname.includes('vercel.app') ? 'https://yotube-watch-party.onrender.com' : '';
       const checkUrl = `${serverPrefix}/room?username=${encodeURIComponent(username)}&roomid=${encodeURIComponent(roomid)}`;
-      
-      xhr.open("GET", checkUrl);
-      xhr.send();
-      xhr.onreadystatechange = () => {
-        if (xhr.readyState === 4 && xhr.status === 200) {
-          try {
-            const res = JSON.parse(xhr.responseText);
-            if (res.error === false) {
-              window.location.href = `/room.html?username=${encodeURIComponent(username)}&roomid=${encodeURIComponent(roomid)}`;
-            } else {
-              swal("Cannot Join Room", res.message, "error");
-            }
-          } catch (err) {
-            console.error(err);
-          }
+
+      try {
+        const res = await fetch(checkUrl, { method: 'GET', headers: { 'Accept': 'application/json' } });
+        const data = await res.json();
+        if (data && data.error === false) {
+          window.location.href = `/room.html?username=${encodeURIComponent(username)}&roomid=${encodeURIComponent(roomid)}`;
+        } else {
+          swal("Cannot Join Room", data.message || "Invalid Room ID. Please check the code.", "error");
         }
-      };
+      } catch (err) {
+        console.error("Room verification fallback:", err);
+        // Direct fallback redirect
+        window.location.href = `/room.html?username=${encodeURIComponent(username)}&roomid=${encodeURIComponent(roomid)}`;
+      }
     });
   }
 }
