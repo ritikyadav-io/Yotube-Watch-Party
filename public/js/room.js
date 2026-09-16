@@ -326,7 +326,7 @@ function playPreviousVideo() {
 }
 
 function loadVideoInPlayer(videoObj) {
-  if (!videoObj) return;
+  if (!videoObj || !videoObj.video_id) return;
   currentVideoObj = videoObj;
 
   const titleEl = document.getElementById('video-title') || $videoTitle;
@@ -335,13 +335,21 @@ function loadVideoInPlayer(videoObj) {
   if (titleEl) titleEl.textContent = videoObj.title || "YouTube Watch Party Player";
   if (channelEl) channelEl.innerHTML = `<i class="fa-solid fa-circle-check text-primary me-1"></i> ${videoObj.channel || "Synchronized Stream"}`;
 
-  if (isPlayerReady && player && typeof player.loadVideoById === 'function') {
-    const currentId = (typeof player.getVideoData === 'function') ? player.getVideoData().video_id : null;
-    if (currentId !== videoObj.video_id) {
-      player.loadVideoById(videoObj.video_id, 0);
+  // 1. Trigger YouTube Player API or iframe reload with target video ID
+  ensureYouTubePlayerLoaded(videoObj.video_id);
+
+  // 2. Force DOM iframe element src synchronization to guarantee video frame switches visually
+  const playerContainer = document.getElementById('player');
+  if (playerContainer) {
+    const iframe = playerContainer.querySelector('iframe');
+    const embedUrl = `https://www.youtube.com/embed/${videoObj.video_id}?autoplay=1&playsinline=1&enablejsapi=1&rel=0`;
+    if (iframe) {
+      if (!iframe.src || !iframe.src.includes(videoObj.video_id)) {
+        iframe.src = embedUrl;
+      }
+    } else {
+      playerContainer.innerHTML = `<iframe id="fallback-yt-iframe" style="width:100%; height:100%; border:0; position:absolute; top:0; left:0;" src="${embedUrl}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
     }
-  } else {
-    initYouTubePlayer(videoObj.video_id);
   }
 }
 
@@ -1257,16 +1265,21 @@ function applyPendingSync() {
 function ensureYouTubePlayerLoaded(videoId) {
   const vidToPlay = videoId || (currentVideoObj ? currentVideoObj.video_id : 'L7mfjvdnPno');
 
-  // 1. If YT.Player instance is initialized and ready, use loadVideoById
+  // 1. If YT.Player instance is initialized and ready, use loadVideoById (with object parameter fallback)
   if (player && isPlayerReady && typeof player.loadVideoById === 'function') {
     try {
-      player.loadVideoById(vidToPlay, 0);
-      return;
-    } catch (e) {}
+      player.loadVideoById({ videoId: vidToPlay, startSeconds: 0 });
+      if (typeof player.playVideo === 'function') player.playVideo();
+    } catch (e1) {
+      try {
+        player.loadVideoById(vidToPlay, 0);
+        if (typeof player.playVideo === 'function') player.playVideo();
+      } catch (e2) {}
+    }
   }
 
-  // 2. If YT API constructor is available, create API player
-  if (typeof YT !== 'undefined' && YT.Player && typeof YT.Player === 'function') {
+  // 2. If YT API constructor is available and no player instance exists, create API player
+  if (!player && typeof YT !== 'undefined' && YT.Player && typeof YT.Player === 'function') {
     try {
       const container = document.getElementById('player');
       if (container && container.querySelector('iframe#fallback-yt-iframe')) {
@@ -1283,7 +1296,7 @@ function ensureYouTubePlayerLoaded(videoId) {
           'enablejsapi': 1,
           'rel': 0,
           'modestbranding': 1,
-          'autoplay': 0,
+          'autoplay': 1,
           'mute': 0
         },
         events: {
@@ -1301,10 +1314,10 @@ function ensureYouTubePlayerLoaded(videoId) {
   // 3. Mobile / Network Fallback Embed: Render or update YouTube responsive iframe directly
   const playerContainer = document.getElementById('player');
   if (playerContainer) {
-    const embedUrl = `https://www.youtube.com/embed/${vidToPlay}?autoplay=0&playsinline=1&enablejsapi=1&rel=0`;
+    const embedUrl = `https://www.youtube.com/embed/${vidToPlay}?autoplay=1&playsinline=1&enablejsapi=1&rel=0`;
     const existingIframe = playerContainer.querySelector('iframe');
     if (existingIframe) {
-      if (!existingIframe.src.includes(vidToPlay)) {
+      if (!existingIframe.src || !existingIframe.src.includes(vidToPlay)) {
         existingIframe.src = embedUrl;
       }
     } else {
@@ -1343,30 +1356,21 @@ function onPlayerReady(event) {
 
   const unlockAndUnmute = () => {
     if (player && typeof player.unMute === 'function') {
-      try {
-        player.unMute();
-        player.setVolume(100);
-        player.playVideo();
-      } catch (e) {}
+      player.unMute();
+    }
+    if (player && typeof player.setVolume === 'function') {
+      player.setVolume(100);
+    }
+    if (player && typeof player.playVideo === 'function') {
+      player.playVideo();
     }
   };
 
-  try {
-    event.target.unMute();
-    event.target.setVolume(100);
-    event.target.playVideo();
-  } catch (e) {}
-
-  // Automatically unMute & play on any user gesture across document
-  ['pointerdown', 'touchstart', 'click', 'keydown'].forEach(evt => {
-    document.addEventListener(evt, unlockAndUnmute, { once: true });
-    window.addEventListener(evt, unlockAndUnmute, { once: true });
-  });
+  document.body.addEventListener('click', unlockAndUnmute, { once: true });
+  document.body.addEventListener('touchstart', unlockAndUnmute, { once: true });
 
   if (pendingSyncState) {
     applyPendingSync();
-  } else if (currentVideoObj) {
-    loadVideoInPlayer(currentVideoObj);
   }
 }
 
@@ -1449,11 +1453,7 @@ socket.on("sync_state", (state) => {
     isPlaying: state.isPlaying !== false
   };
 
-  if (isPlayerReady && player && typeof player.loadVideoById === 'function') {
-    applyPendingSync();
-  } else {
-    initYouTubePlayer(videoObj.video_id);
-  }
+  ensureYouTubePlayerLoaded(videoObj.video_id);
 });
 
 socket.on("playVideoDirectly", (videoObj) => {
@@ -1461,26 +1461,7 @@ socket.on("playVideoDirectly", (videoObj) => {
     if (currentVideoObj && currentVideoObj.video_id !== videoObj.video_id) {
       historyQueue.push(currentVideoObj);
     }
-    currentVideoObj = videoObj;
-
-    const titleEl = document.getElementById('video-title') || $videoTitle;
-    const channelEl = document.getElementById('channel-name') || $channelName;
-    if (titleEl) titleEl.textContent = videoObj.title || "YouTube Watch Party Player";
-    if (channelEl) channelEl.innerHTML = `<i class="fa-solid fa-circle-check text-primary me-1"></i> ${videoObj.channel || "Synchronized Stream"}`;
-
-    pendingSyncState = { videoId: videoObj.video_id, currentTime: 0, isPlaying: true };
-
-    if (player && typeof player.loadVideoById === 'function') {
-      try {
-        player.loadVideoById(videoObj.video_id, 0);
-        player.playVideo();
-      } catch (e) {
-        ensureYouTubePlayerLoaded(videoObj.video_id);
-      }
-    } else {
-      ensureYouTubePlayerLoaded(videoObj.video_id);
-    }
-
+    loadVideoInPlayer(videoObj);
     renderRoomVideoGrid(ROOM_CURATED);
   }
 });
