@@ -1390,19 +1390,6 @@ function onPlayerReady(event) {
     event.target.playVideo();
   } catch (e) {}
 
-  const unmuteBtn = document.getElementById('btn-unmute-sound');
-  if (unmuteBtn) {
-    unmuteBtn.onclick = function () {
-      if (player && typeof player.unMute === 'function') {
-        player.unMute();
-        player.setVolume(100);
-        player.playVideo();
-        showToast("Audio Unmuted!", "fa-volume-high");
-        unmuteBtn.style.display = 'none';
-      }
-    };
-  }
-
   if (pendingSyncState) {
     applyPendingSync();
   } else if (currentVideoObj) {
