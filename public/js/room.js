@@ -1093,7 +1093,7 @@ function initYouTubePlayer(videoId) {
         'start': 0,
         'disablekb': 0,
         'rel': 0,
-        'autoplay': 1
+        'autoplay': 0
       },
       events: {
         'onReady': onPlayerReady,
@@ -1116,16 +1116,18 @@ if (firstScriptTag && firstScriptTag.parentNode) {
 }
 
 function onPlayerError(event) {
-  console.warn("YouTube player error (video unavailable/restricted):", event.data);
-  if (canControlPlayback()) {
-    showToast("Host video restricted, autoplaying next video...", "fa-forward");
-    setTimeout(() => {
-      playNextVideo();
-    }, 800);
-  } else {
-    showToast("Playback error on your browser. Resyncing with Host...", "fa-rotate");
-    if (roomid) {
-      socket.emit("joinRoom", { username, roomid });
+  console.warn("YouTube player error code:", event.data);
+  const errCode = event.data;
+
+  // Only handle genuine un-embeddable or restricted video errors (100, 101, 150)
+  if (errCode === 100 || errCode === 101 || errCode === 150) {
+    if (canControlPlayback()) {
+      showToast("Video restricted by YouTube owner, autoplaying next...", "fa-forward");
+      setTimeout(() => {
+        playNextVideo();
+      }, 800);
+    } else {
+      showToast("Current video is restricted on YouTube.", "fa-triangle-exclamation");
     }
   }
 }
@@ -1142,8 +1144,14 @@ function onPlayerReady(event) {
   }
 }
 
+var syncHeartbeatTimer = null;
+
 function onPlayerStateChange(event) {
   if (event.data === YT.PlayerState.PAUSED) {
+    if (syncHeartbeatTimer) {
+      clearInterval(syncHeartbeatTimer);
+      syncHeartbeatTimer = null;
+    }
     if (canControlPlayback()) {
       socket.emit("videoPaused");
     }
@@ -1153,10 +1161,22 @@ function onPlayerStateChange(event) {
     if (canControlPlayback()) {
       const currentTime = player.getCurrentTime();
       socket.emit("videoPlaying", currentTime);
+
+      if (!syncHeartbeatTimer) {
+        syncHeartbeatTimer = setInterval(() => {
+          if (canControlPlayback() && player && typeof player.getCurrentTime === 'function') {
+            socket.emit("videoPlaying", player.getCurrentTime());
+          }
+        }, 3000);
+      }
     }
   }
 
   if (event.data === YT.PlayerState.ENDED) {
+    if (syncHeartbeatTimer) {
+      clearInterval(syncHeartbeatTimer);
+      syncHeartbeatTimer = null;
+    }
     if (canControlPlayback()) {
       playNextVideo();
       socket.emit("playNextVideo");

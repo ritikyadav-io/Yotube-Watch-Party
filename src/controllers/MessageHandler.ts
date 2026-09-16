@@ -41,8 +41,20 @@ export class MessageHandler {
 
                 this.broadcastRoomUsers(room.id);
 
-                // Send latest sync state to joining participant
-                socket.emit("sync_state", room.playbackState);
+                // Calculate live playback position based on elapsed time if video is currently playing
+                let liveTime = room.playbackState.currentTime;
+                if (room.playbackState.isPlaying) {
+                    const elapsed = (Date.now() - room.playbackState.updatedAt) / 1000;
+                    liveTime += elapsed;
+                }
+
+                const syncPayload = {
+                    ...room.playbackState,
+                    currentTime: liveTime
+                };
+
+                // Send latest live sync state to joining participant
+                socket.emit("sync_state", syncPayload);
                 socket.emit("playlistUpdated", room.playlist);
             });
 
