@@ -479,8 +479,8 @@ if ($urlForm) {
         addVideoFromUrl(query);
         if (urlInput) urlInput.value = '';
       } else {
-        fetchRoomYouTubeVideos(query);
-        showToast(`Searching for "${query}"...`, "fa-magnifying-glass");
+        fetchRoomYouTubeVideos(query, true);
+        showToast(`Searching: "${query}"...`, "fa-magnifying-glass");
       }
     }
   });
@@ -492,10 +492,10 @@ if ($urlForm) {
       if (val && !youtube_parser(val)) {
         clearTimeout(navSearchTimer);
         navSearchTimer = setTimeout(() => {
-          fetchRoomYouTubeVideos(val);
+          fetchRoomYouTubeVideos(val, false);
         }, 400);
       } else if (!val) {
-        renderRoomVideoGrid(ROOM_CURATED);
+        renderRoomVideoGrid(ROOM_CURATED, false);
       }
     });
   }
@@ -899,7 +899,7 @@ const categoryQueryMap = {
   'gaming': 'GTA VI trailer gaming'
 };
 
-async function fetchRoomYouTubeVideos(query = 'hindi_hits') {
+async function fetchRoomYouTubeVideos(query = 'hindi_hits', isUserSearch = false) {
   const apiKey = localStorage.getItem('YOUTUBE_API_KEY') || window.ENV_YOUTUBE_API_KEY || '';
   const actualQuery = categoryQueryMap[query] || query;
   
@@ -920,7 +920,7 @@ async function fetchRoomYouTubeVideos(query = 'hindi_hits') {
             thumbnail: item.snippet.thumbnails.high ? item.snippet.thumbnails.high.url : (item.snippet.thumbnails.medium ? item.snippet.thumbnails.medium.url : item.snippet.thumbnails.default.url)
           }));
         if (formatted.length > 0) {
-          renderRoomVideoGrid(formatted);
+          renderRoomVideoGrid(formatted, isUserSearch);
           return;
         }
       }
@@ -929,30 +929,41 @@ async function fetchRoomYouTubeVideos(query = 'hindi_hits') {
     }
   }
 
-  // 2. Public Invidious / Piped API Search Proxy
-  try {
-    const res = await fetch(`https://pipedapi.kavin.rocks/search?q=${encodeURIComponent(actualQuery)}&filter=videos`);
-    const data = await res.json();
-    if (data.items && data.items.length > 0) {
-      const formatted = data.items
-        .filter(item => item.url && item.url.includes('/watch?v='))
-        .slice(0, 12)
-        .map(item => {
-          const vId = item.url.split('v=')[1];
-          return {
-            id: vId,
-            title: item.title,
-            channel: item.uploaderName || 'YouTube',
-            thumbnail: item.thumbnail || `https://img.youtube.com/vi/${vId}/mqdefault.jpg`
-          };
-        });
-      if (formatted.length > 0) {
-        renderRoomVideoGrid(formatted);
-        return;
+  // 2. Public Piped & Invidious API Search Proxies
+  const proxyEndpoints = [
+    `https://pipedapi.kavin.rocks/search?q=${encodeURIComponent(actualQuery)}&filter=videos`,
+    `https://api.piped.private.coffee/search?q=${encodeURIComponent(actualQuery)}&filter=videos`,
+    `https://yt.lemnoslife.com/noKey/search?q=${encodeURIComponent(actualQuery)}`
+  ];
+
+  for (const endpoint of proxyEndpoints) {
+    try {
+      const res = await fetch(endpoint);
+      const data = await res.json();
+      if (data && (data.items || Array.isArray(data))) {
+        const list = Array.isArray(data) ? data : data.items;
+        const formatted = list
+          .filter(item => (item.url && item.url.includes('/watch?v=')) || (item.id && item.id.videoId) || item.videoId)
+          .slice(0, 12)
+          .map(item => {
+            const vId = item.videoId || (item.id ? item.id.videoId : null) || (item.url ? item.url.split('v=')[1] : null);
+            return {
+              id: vId,
+              title: item.title || (item.snippet ? item.snippet.title : 'YouTube Video'),
+              channel: item.uploaderName || (item.snippet ? item.snippet.channelTitle : 'YouTube Channel'),
+              thumbnail: item.thumbnail || (item.snippet && item.snippet.thumbnails && item.snippet.thumbnails.high ? item.snippet.thumbnails.high.url : `https://img.youtube.com/vi/${vId}/hqdefault.jpg`)
+            };
+          })
+          .filter(v => v.id);
+
+        if (formatted.length > 0) {
+          renderRoomVideoGrid(formatted, isUserSearch);
+          return;
+        }
       }
+    } catch (e) {
+      // Ignore fallback
     }
-  } catch (e) {
-    // Ignore fallback to local search
   }
 
   // 3. Category & Local Multi-Keyword Fuzzy Lookup
@@ -960,7 +971,7 @@ async function fetchRoomYouTubeVideos(query = 'hindi_hits') {
   if (filterFn) {
     const filtered = ROOM_CURATED.filter(filterFn);
     if (filtered.length > 0) {
-      renderRoomVideoGrid(filtered);
+      renderRoomVideoGrid(filtered, isUserSearch);
       return;
     }
   }
@@ -972,10 +983,10 @@ async function fetchRoomYouTubeVideos(query = 'hindi_hits') {
     return terms.some(term => target.includes(term));
   });
 
-  renderRoomVideoGrid(filtered.length > 0 ? filtered : ROOM_CURATED);
+  renderRoomVideoGrid(filtered.length > 0 ? filtered : ROOM_CURATED, isUserSearch);
 }
 
-function renderRoomVideoGrid(videos) {
+function renderRoomVideoGrid(videos, isUserSearch = false) {
   const grid = document.getElementById('room-video-grid');
   if (!grid) return;
   grid.innerHTML = '';
@@ -996,6 +1007,12 @@ function renderRoomVideoGrid(videos) {
 
   // Shuffle/rotate dynamically so suggestions always vary
   uniqueList.sort(() => Math.random() - 0.5);
+
+  if (isUserSearch) {
+    setTimeout(() => {
+      grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  }
 
   uniqueList.slice(0, 12).forEach(video => {
     const card = document.createElement('div');
@@ -1129,14 +1146,17 @@ function initYouTubePlayer(videoId) {
       height: '450',
       width: '800',
       videoId: vidToPlay,
+      host: 'https://www.youtube.com',
       playerVars: {
         'playsinline': 1,
         'controls': control,
         'enablejsapi': 1,
+        'origin': window.location.origin,
         'start': 0,
         'disablekb': 0,
         'rel': 0,
-        'autoplay': 1
+        'autoplay': 1,
+        'modestbranding': 1
       },
       events: {
         'onReady': onPlayerReady,
@@ -1162,15 +1182,15 @@ function onPlayerError(event) {
   console.warn("YouTube player error code:", event.data);
   const errCode = event.data;
 
-  // Only handle genuine un-embeddable or restricted video errors (100, 101, 150)
-  if (errCode === 100 || errCode === 101 || errCode === 150) {
+  // Handles restricted embedding, invalid parameters, or unplayable video errors (2, 5, 100, 101, 150)
+  if (errCode === 2 || errCode === 5 || errCode === 100 || errCode === 101 || errCode === 150) {
     if (canControlPlayback()) {
-      showToast("Video restricted by YouTube owner, autoplaying next...", "fa-forward");
+      showToast("Current video is restricted on YouTube. Autoplay next working video...", "fa-forward");
       setTimeout(() => {
         playNextVideo();
-      }, 800);
+      }, 1000);
     } else {
-      showToast("Current video is restricted on YouTube.", "fa-triangle-exclamation");
+      showToast("Current video is restricted by YouTube owner.", "fa-triangle-exclamation");
     }
   }
 }
