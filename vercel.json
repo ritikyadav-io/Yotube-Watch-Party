@@ -1,19 +1,18 @@
 {
   "version": 2,
-  "builds": [
+  "cleanUrls": true,
+  "rewrites": [
     {
-      "src": "public/**",
-      "use": "@vercel/static"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/room",
-      "dest": "https://yotube-watch-party.onrender.com/room"
+      "source": "/room",
+      "destination": "/room.html"
     },
     {
-      "src": "/(.*)",
-      "dest": "/public/$1"
+      "source": "/room.html",
+      "destination": "/room.html"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/$1"
     }
   ]
 }

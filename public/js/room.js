@@ -3,10 +3,14 @@
 // ==========================================================================
 
 var serverUrl = window.location.hostname.includes('vercel.app')
-  ? 'https://yotube-watch-party.onrender.com'
+  ? 'https://youtube-watch-party.onrender.com'
   : undefined;
 
-var socket = io(serverUrl);
+var socket = io(serverUrl, {
+  transports: ['websocket', 'polling'],
+  timeout: 10000,
+  reconnectionAttempts: 5
+});
 
 // UI Element Handles
 const $messageForm = document.querySelector('#message-form');
@@ -201,32 +205,38 @@ function initSidebarTabs() {
 }
 
 async function initialSetup() {
+  const defaultVideo = {
+    title: "Ed Sheeran - Shape of You",
+    channel: "Ed Sheeran",
+    thumbnail_url: "https://i.ytimg.com/vi/JGwWNGJdvx8/hqdefault.jpg",
+    video_url: "https://www.youtube.com/watch?v=JGwWNGJdvx8",
+    video_id: "JGwWNGJdvx8"
+  };
+
+  // 1. Immediately load video into player UI so mobile/desktop never shows a black screen
+  if (params.has('initialVideo')) {
+    const initialUrl = params.get('initialVideo');
+    addVideoFromUrl(initialUrl, true);
+  } else {
+    loadVideoInPlayer(defaultVideo);
+  }
+
+  // 2. Immediately set or generate Room ID in UI input field
+  const roomInput = document.getElementById("roomid");
   if (params.has('roomid')) {
     roomid = params.get('roomid');
-    socket.emit("joinRoom", { username, roomid });
-    document.getElementById("roomid").value = roomid;
+    if (roomInput) roomInput.value = roomid;
+    if (socket) socket.emit("joinRoom", { username, roomid });
   } else {
-    const defaultVideo = {
-      title: "Ed Sheeran - Shape of You",
-      channel: "Ed Sheeran",
-      thumbnail_url: "https://i.ytimg.com/vi/JGwWNGJdvx8/hqdefault.jpg",
-      video_url: "https://www.youtube.com/watch?v=JGwWNGJdvx8",
-      video_id: "JGwWNGJdvx8"
-    };
+    const generatedId = 'ROOM-' + Math.floor(1000 + Math.random() * 9000);
+    roomid = generatedId;
+    if (roomInput) roomInput.value = roomid;
+    if (socket) socket.emit("createRoom", { username });
 
-    socket.emit("createRoom", { username });
     socket.on("getRoomID", (id) => {
-      roomid = id;
-      document.getElementById("roomid").value = id;
-
-      if (params.has('initialVideo')) {
-        const initialUrl = params.get('initialVideo');
-        addVideoFromUrl(initialUrl, true);
-      } else {
-        loadVideoInPlayer(defaultVideo);
-        if (canControlPlayback()) {
-          socket.emit("playVideoDirectly", defaultVideo);
-        }
+      if (id) {
+        roomid = id;
+        if (roomInput) roomInput.value = id;
       }
     });
   }
