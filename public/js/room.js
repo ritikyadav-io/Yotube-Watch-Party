@@ -1329,7 +1329,8 @@ function ensureYouTubePlayerLoaded(videoId) {
           'enablejsapi': 1,
           'rel': 0,
           'modestbranding': 1,
-          'autoplay': 1
+          'autoplay': 1,
+          'mute': 1
         },
         events: {
           'onReady': onPlayerReady,
@@ -1346,7 +1347,7 @@ function ensureYouTubePlayerLoaded(videoId) {
   // 3. Mobile / Network Fallback Embed: Render or update YouTube responsive iframe directly
   const playerContainer = document.getElementById('player');
   if (playerContainer) {
-    const embedUrl = `https://www.youtube.com/embed/${vidToPlay}?autoplay=1&playsinline=1&enablejsapi=1&rel=0`;
+    const embedUrl = `https://www.youtube.com/embed/${vidToPlay}?autoplay=1&playsinline=1&mute=1&enablejsapi=1&rel=0`;
     const existingIframe = playerContainer.querySelector('iframe');
     if (existingIframe) {
       if (!existingIframe.src.includes(vidToPlay)) {
@@ -1385,13 +1386,27 @@ function onPlayerError(event) {
 
 function onPlayerReady(event) {
   isPlayerReady = true;
+  try {
+    event.target.playVideo();
+  } catch (e) {}
+
+  const unmuteBtn = document.getElementById('btn-unmute-sound');
+  if (unmuteBtn) {
+    unmuteBtn.onclick = function () {
+      if (player && typeof player.unMute === 'function') {
+        player.unMute();
+        player.setVolume(100);
+        player.playVideo();
+        showToast("Audio Unmuted!", "fa-volume-high");
+        unmuteBtn.style.display = 'none';
+      }
+    };
+  }
+
   if (pendingSyncState) {
     applyPendingSync();
   } else if (currentVideoObj) {
     loadVideoInPlayer(currentVideoObj);
-    event.target.playVideo();
-  } else {
-    event.target.playVideo();
   }
 }
 

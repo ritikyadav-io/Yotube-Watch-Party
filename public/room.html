@@ -85,7 +85,7 @@
         <div class="player-wrapper">
           <div class="video-container">
             <div id="player">
-              <iframe id="initial-yt-iframe" style="width:100%; height:100%; border:0; position:absolute; top:0; left:0;" src="https://www.youtube.com/embed/JGwWNGJdvx8?autoplay=1&playsinline=1&enablejsapi=1" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+              <iframe id="initial-yt-iframe" style="width:100%; height:100%; border:0; position:absolute; top:0; left:0;" src="https://www.youtube.com/embed/JGwWNGJdvx8?autoplay=1&playsinline=1&mute=1&enablejsapi=1" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
             </div>
           </div>
 
@@ -100,6 +100,11 @@
               <!-- Next Video Button -->
               <button class="btn-player btn-player-next" id="next-video" title="Next Video in Queue">
                 Next <i class="fa-solid fa-forward-step"></i>
+              </button>
+
+              <!-- Unmute Audio Button for Mobile Browsers -->
+              <button class="btn-player btn-player-unmute bg-warning text-dark fw-bold" id="btn-unmute-sound" title="Click to Unmute Sound">
+                <i class="fa-solid fa-volume-high"></i> Unmute Sound
               </button>
             </div>
 

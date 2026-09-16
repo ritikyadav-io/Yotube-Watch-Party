@@ -1,34 +1,13 @@
 {
   "version": 2,
   "cleanUrls": true,
-  "routes": [
-    {
-      "src": "/room",
-      "dest": "/public/room.html"
-    },
-    {
-      "src": "/room.html",
-      "dest": "/public/room.html"
-    },
-    {
-      "src": "/",
-      "dest": "/public/index.html"
-    },
-    {
-      "src": "/css/(.*)",
-      "dest": "/public/css/$1"
-    },
-    {
-      "src": "/js/(.*)",
-      "dest": "/public/js/$1"
-    },
-    {
-      "src": "/images/(.*)",
-      "dest": "/public/images/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/public/$1"
-    }
+  "rewrites": [
+    { "source": "/", "destination": "/public/index.html" },
+    { "source": "/room", "destination": "/public/room.html" },
+    { "source": "/room.html", "destination": "/public/room.html" },
+    { "source": "/css/:path*", "destination": "/public/css/:path*" },
+    { "source": "/js/:path*", "destination": "/public/js/:path*" },
+    { "source": "/images/:path*", "destination": "/public/images/:path*" },
+    { "source": "/:path*", "destination": "/public/:path*" }
   ]
 }

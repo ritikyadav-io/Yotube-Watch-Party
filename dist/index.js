@@ -22,9 +22,22 @@ app.use((req, res, next) => {
     }
     next();
 });
+const path_1 = __importDefault(require("path"));
+const publicPath = path_1.default.join(__dirname, '../public');
+app.use(express_1.default.static(publicPath));
 app.use(express_1.default.static('public'));
 app.use(express_1.default.urlencoded({ extended: false }));
 app.use(express_1.default.json());
+// Explicit Static File Routes for Vercel & Express fallback
+app.get('/', (req, res) => {
+    res.sendFile(path_1.default.join(publicPath, 'index.html'));
+});
+app.get('/index.html', (req, res) => {
+    res.sendFile(path_1.default.join(publicPath, 'index.html'));
+});
+app.get('/room.html', (req, res) => {
+    res.sendFile(path_1.default.join(publicPath, 'room.html'));
+});
 // Initialize Socket.IO with CORS
 const io = new socket_io_1.default.Server(httpServer, {
     cors: {

@@ -1175,6 +1175,16 @@ a:hover {
   .header-room-actions #roomid {
     max-width: none !important;
     flex: 1 1 auto !important;
+    background: rgba(15, 23, 42, 0.95) !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    opacity: 1 !important;
+    font-weight: 700 !important;
+  }
+  .header-room-actions input[readonly] {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    opacity: 1 !important;
   }
   .header-room-actions .btn-secondary-custom {
     padding: 0.25rem 0.5rem !important;
