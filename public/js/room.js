@@ -62,7 +62,10 @@ function showToast(msg, icon = 'fa-circle-check') {
 // 1. Initial Setup & Event Listeners
 // --------------------------------------------------------------------------
 document.addEventListener('DOMContentLoaded', () => {
-  if ($greet) $greet.textContent = `User: ${username}`;
+  const greetEl = document.getElementById('greeting-text') || $greet;
+  if (greetEl) greetEl.textContent = `User: ${username}`;
+
+  loadVideoInPlayer(currentVideoObj);
   initApiKeyManager();
   initCopyButtons();
   initSidebarTabs();
@@ -70,6 +73,10 @@ document.addEventListener('DOMContentLoaded', () => {
   initSmartNavbarScroll();
   initEmojiBar();
   initialSetup();
+
+  if (typeof YT !== 'undefined' && YT.Player) {
+    initYouTubePlayer();
+  }
 });
 
 function initSmartNavbarScroll() {
@@ -279,11 +286,20 @@ function playPreviousVideo() {
 }
 
 function loadVideoInPlayer(videoObj) {
-  if (player && player.loadVideoById) {
+  if (!videoObj) return;
+  currentVideoObj = videoObj;
+
+  const titleEl = document.getElementById('video-title') || $videoTitle;
+  const channelEl = document.getElementById('channel-name') || $channelName;
+
+  if (titleEl) titleEl.textContent = videoObj.title || "YouTube Watch Party Player";
+  if (channelEl) channelEl.innerHTML = `<i class="fa-solid fa-circle-check text-primary me-1"></i> ${videoObj.channel || "Synchronized Stream"}`;
+
+  if (player && typeof player.loadVideoById === 'function') {
     player.loadVideoById(videoObj.video_id, 0);
+  } else {
+    initYouTubePlayer(videoObj.video_id);
   }
-  $videoTitle.textContent = videoObj.title;
-  $channelName.innerHTML = `<i class="fa-solid fa-circle-check text-primary me-1"></i> ${videoObj.channel}`;
 }
 
 if ($nextVideo) {
@@ -964,32 +980,51 @@ function escapeHtml(str) {
 }
 
 // --------------------------------------------------------------------------
-// 6. YouTube IFrame Player API Integration
+// 6. YouTube IFrame Player API Integration & Sync Engine
 // --------------------------------------------------------------------------
+var player;
+
+function initYouTubePlayer(videoId) {
+  const vidToPlay = videoId || (currentVideoObj ? currentVideoObj.video_id : 'sQVeK7dT18Y');
+
+  if (player) {
+    if (typeof player.loadVideoById === 'function') {
+      player.loadVideoById(vidToPlay, 0);
+    }
+    return;
+  }
+
+  if (typeof YT !== 'undefined' && YT.Player) {
+    player = new YT.Player('player', {
+      height: '450',
+      width: '800',
+      videoId: vidToPlay,
+      playerVars: {
+        'playsinline': 1,
+        'controls': control,
+        'start': 0,
+        'disablekb': 1,
+        'rel': 0,
+        'autoplay': 0
+      },
+      events: {
+        'onReady': onPlayerReady,
+        'onStateChange': onPlayerStateChange,
+        'onError': onPlayerError
+      }
+    });
+  }
+}
+
+window.onYouTubeIframeAPIReady = function () {
+  initYouTubePlayer();
+};
+
 var tag = document.createElement('script');
 tag.src = "https://www.youtube.com/iframe_api";
 var firstScriptTag = document.getElementsByTagName('script')[0];
-firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-
-var player;
-function onYouTubeIframeAPIReady() {
-  player = new YT.Player('player', {
-    height: '450',
-    width: '800',
-    videoId: 'sQVeK7dT18Y',
-    playerVars: {
-      'playsinline': 1,
-      'controls': control,
-      'start': 0,
-      'disablekb': 1,
-      'rel': 0
-    },
-    events: {
-      'onReady': onPlayerReady,
-      'onStateChange': onPlayerStateChange,
-      'onError': onPlayerError
-    }
-  });
+if (firstScriptTag && firstScriptTag.parentNode) {
+  firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 }
 
 function onPlayerError(event) {
@@ -1001,6 +1036,9 @@ function onPlayerError(event) {
 }
 
 function onPlayerReady(event) {
+  if (currentVideoObj) {
+    loadVideoInPlayer(currentVideoObj);
+  }
   event.target.pauseVideo();
 }
 
@@ -1026,19 +1064,59 @@ function onPlayerStateChange(event) {
   }
 }
 
+// --------------------------------------------------------------------------
+// 7. Synchronized WebSocket Listeners
+// --------------------------------------------------------------------------
+socket.on("sync_state", (state) => {
+  if (!state || !state.videoId) return;
+  const targetVideoId = state.videoId;
+
+  const match = ROOM_CURATED.find(v => v.id === targetVideoId);
+  const videoObj = match ? {
+    title: match.title,
+    channel: match.channel,
+    thumbnail_url: match.thumbnail,
+    video_url: `https://www.youtube.com/watch?v=${match.id}`,
+    video_id: match.id
+  } : {
+    title: "Synchronized Video Stream",
+    channel: "Watch Party Stream",
+    thumbnail_url: `https://i.ytimg.com/vi/${targetVideoId}/hqdefault.jpg`,
+    video_url: `https://www.youtube.com/watch?v=${targetVideoId}`,
+    video_id: targetVideoId
+  };
+
+  loadVideoInPlayer(videoObj);
+
+  if (player && typeof player.seekTo === 'function') {
+    player.seekTo(state.currentTime || 0, true);
+    if (state.isPlaying && typeof player.playVideo === 'function') {
+      player.playVideo();
+    } else if (!state.isPlaying && typeof player.pauseVideo === 'function') {
+      player.pauseVideo();
+    }
+  }
+});
+
+socket.on("playVideoDirectly", (videoObj) => {
+  if (videoObj && videoObj.video_id) {
+    loadVideoInPlayer(videoObj);
+  }
+});
+
 socket.on("videoPaused", () => {
-  if (player && player.pauseVideo) player.pauseVideo();
+  if (player && typeof player.pauseVideo === 'function') player.pauseVideo();
 });
 
 socket.on("videoPlaying", (currentTime) => {
-  if (player && player.seekTo && player.playVideo) {
+  if (player && typeof player.seekTo === 'function' && typeof player.playVideo === 'function') {
     player.seekTo(currentTime, true);
     player.playVideo();
   }
 });
 
 socket.on("seek", (currentTime) => {
-  if (player && player.seekTo) {
+  if (player && typeof player.seekTo === 'function') {
     player.seekTo(currentTime, true);
   }
 });
