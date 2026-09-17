@@ -6,7 +6,6 @@
 [![Node.js](https://img.shields.io/badge/Node.js-v16%2B-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Socket.IO](https://img.shields.io/badge/Socket.IO-Real--time-010101?logo=socket.io&logoColor=white)](https://socket.io/)
-[![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](#-license)
 
 ---
 
@@ -30,7 +29,6 @@
 - [Scalability Architecture](#-scalability-architecture-1000-concurrent-users)
 - [Local Setup](#-local-setup--execution-guide)
 - [Deployment Guide](#-deployment-guide-render--vercel)
-- [License](#-license)
 
 ---
 
@@ -264,7 +262,3 @@ sequenceDiagram
 5. Click **Create Web Service**. Your live URL will be generated (e.g., `https://yotube-watch-party.onrender.com`).
 
 ---
-
-## 📜 License
-
-This project is licensed under the **ISC License**.
