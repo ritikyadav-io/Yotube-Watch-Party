@@ -25,36 +25,6 @@
 6. **Strict Capacity & Privacy Controls:** Enforces a maximum limit of 5 participants per room. Room Code and Invite Link controls are visible strictly to the Room Host.
 7. **Live Chat & Online Room Roster:** Integrated real-time messaging with Host/Moderator badges, unread message badges, system join/leave toasts, and dropdown management controls.
 
----
-
-## 🏗️ Architecture & WebSockets Flow
-
-### WebSockets Sequence Diagram
-
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Host as 👑 Host (Client)
-    participant Server as ⚙️ Node.js WebSocket Server
-    participant Room as 🧱 Room / RoomManager
-    actor Participant as 👤 Participant (Client)
-
-    Host->>Server: emit("createRoom", { username })
-    Server->>Room: RoomManager.createRoom()
-    Room-->>Server: Room & Host Instance
-    Server-->>Host: emit("getRoomID", roomId)
-
-    Participant->>Server: emit("joinRoom", { username, roomId })
-    Server->>Room: RoomManager.joinRoom()
-    Room-->>Server: Success + Role.PARTICIPANT
-    Server-->>Participant: emit("sync_state", { videoId, currentTime, isPlaying })
-    Server-->>Host: broadcast("roomUsersList", users)
-
-    Host->>Server: emit("playVideoDirectly", videoObj)
-    Server->>Room: validatePermission(socket.id, "change_video")
-    Room-->>Server: Allowed = true
-    Server-->>Host: emit("playVideoDirectly", videoObj)
-    Server-->>Participant: emit("playVideoDirectly", videoObj)
 ```
 
 ### ⚡ How WebSockets Integrate with the System Flow
