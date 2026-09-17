@@ -29,6 +29,8 @@
 
 ## 🏗️ Architecture & WebSockets Flow
 
+### WebSockets Sequence Diagram
+
 ```mermaid
 sequenceDiagram
     autonumber
@@ -54,6 +56,26 @@ sequenceDiagram
     Server-->>Host: emit("playVideoDirectly", videoObj)
     Server-->>Participant: emit("playVideoDirectly", videoObj)
 ```
+
+### ⚡ How WebSockets Integrate with the System Flow
+
+1. **Persistent Full-Duplex Connection & Room Subscriptions:**
+   - Clients establish a persistent Socket.IO connection over WebSockets (with automatic HTTP long-polling fallback).
+   - Upon calling `createRoom` or `joinRoom`, the client socket joins a dedicated room channel (`socket.join(room.id)`), allowing targeted event broadcasting to members of that specific watch room.
+
+2. **State Synchronization (`sync_state`) & Join Flow:**
+   - When a new participant joins an ongoing watch party, the server calculates the live playback timestamp (`liveTime = currentTime + elapsed_seconds`) based on the server's single source of truth in memory.
+   - The server emits `sync_state` directly to the joining client so their player seeks to the exact live playback position instantly, and broadcasts `roomUsersList` to all connected clients.
+
+3. **Server-Enforced RBAC Validation & Real-Time Broadcasts:**
+   - When any playback event occurs (`videoPlaying`, `videoPaused`, `seek`, `playVideoDirectly`, `playNextVideo`, `playPreviousVideo`), the client emits a WebSocket event.
+   - The server's `MessageHandler` evaluates `Room.validatePermission(socket.id, action)` to ensure only authorized roles (`HOST` or `MODERATOR`) can execute playback controls.
+   - If allowed, the server updates `room.playbackState` and broadcasts the update via `io.to(room.id).emit(...)` to all clients with sub-second latency.
+
+4. **Request Approval Workflow & Disconnection Grace Handling:**
+   - If a `PARTICIPANT` attempts to change a song or play next/prev, the client emits `request_action`. The server routes an `approval_request_received` event specifically to the `HOST` socket ID.
+   - When the Host approves via `handle_request`, the server executes the video playback change and broadcasts `playVideoDirectly` to the entire room.
+   - If a socket drops due to a mobile network flicker, a 15-second `hostDisconnectTimer` on the server prevents auto-demotion of the Host, ensuring seamless reconnection upon socket handshake.
 
 ---
 
